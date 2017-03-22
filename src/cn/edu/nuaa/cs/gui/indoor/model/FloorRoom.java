@@ -1,9 +1,7 @@
 package cn.edu.nuaa.cs.gui.indoor.model;
 
-import cn.edu.nuaa.cs.gui.indoor.TDViewer;
-
-import javax.media.j3d.*;
 import javax.vecmath.Point3d;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,170 +13,151 @@ public class FloorRoom {
     private int id;
     private String name;
     private String type;
-    private double height;
-    private Vector roomCoords = new Vector(4,1);
-    private Vector doorCoords = new Vector(1,1);
 
-    public static String PATTERN_STRING = "\"[^\"]+\"";
-    public static String PATTERN_DOUBLE = "\\d+\\.\\d";
-    public static String PATTERN_COORD2 = "\\(\\d+\\.\\d+\\s\\d+\\.\\d+\\)";
-    public static String PATTERN_COORD4 = "\\((\\d+\\.\\d+\\s){3,3}\\d+\\.\\d+\\)";
+    private String roomCoords;
+    private String doorCoords;
+
+    public Vector circleVec = new Vector(5,1);
+    public Vector doorVec = new Vector(5,1);
 
     public FloorRoom(String tuple){
-        Pattern pattern;
-        Matcher matcher;
-        Boolean rs;
-        //id
-        pattern = Pattern.compile("\\d+");
-        matcher = pattern.matcher(tuple);
-        rs = matcher.find();
-        this.id = Integer.valueOf(matcher.group());
+        this.id = getPattern_Integer(tuple);
 
-        //name,type
-        String[] temps = new String[2];
-        int i = 0;
-        pattern = Pattern.compile(PATTERN_STRING);
-        matcher = pattern.matcher(tuple);
-        while(matcher.find()){
-            temps[i++] = matcher.group();
+        this.name = getPattern_String(tuple);
+
+        String temp = tuple.replaceAll("\"s*"+this.name+"\"s*", "");
+        this.type = getPattern_String(temp);
+
+        int index = tuple.indexOf('(',2);
+        String tmprd = tuple.substring(index, tuple.length()-1);
+        Vector vec = getCommpents("("+tmprd+")");
+        this.roomCoords = vec.get(0).toString();
+        this.doorCoords = vec.get(1).toString();
+
+        createRooms();
+
+        if(!this.type.equals("ST")){
+            createDoors();
         }
-        this.name = temps[0].substring(1,temps[0].length()-1).trim();
-        this.type = temps[1].substring(1,temps[1].length()-1).trim();
+    }
 
-        //height
-        pattern = Pattern.compile(PATTERN_DOUBLE);
-        matcher = pattern.matcher(tuple);
-        rs = matcher.find();
-        this.height = Double.valueOf(matcher.group());
+    public void createRooms(){
+        Vector vector = getCommpents(roomCoords);
+        for (int i = 0; i < vector.size(); i++) {
+            String temp = vector.get(i).toString();
 
-
-        //room
-        pattern = Pattern.compile(PATTERN_COORD2);
-        matcher = pattern.matcher(tuple);
-        while(matcher.find()){
-            String temp = matcher.group();
-            Pattern p = Pattern.compile(PATTERN_DOUBLE);
-            Matcher m = p.matcher(temp);
-            double xy[] = new double[2];
-            int j = 0;
-            while (m.find()){
-                xy[j++] = Double.valueOf(m.group());
+            double height = getPAttern_Double(temp);
+            Vector coord2Vec = getPAttern_Coord2(temp);
+            Vector pointVec = new Vector();
+            for (int j = 0; j < coord2Vec.size(); j++) {
+                String str = coord2Vec.get(j).toString();
+                String[] ps = str.substring(1,str.length()-1).split(" ");
+                Point3d p3d = new Point3d(Double.valueOf(ps[0]), Double.valueOf(ps[1]), height);
+                pointVec.add(p3d);
             }
-            Point3d p3d = new Point3d(xy[0],xy[1],this.height);
-            this.roomCoords.add(p3d);
+            this.circleVec.add(pointVec);
         }
+    }
+    public void createDoors(){
+        Vector vector = getCommpents(doorCoords);
+        for (int i = 0; i < vector.size(); i++) {
+            String temp = vector.get(i).toString();
+            Vector coord4Vec = getPAttern_Coord4(temp);
+            Vector pointVec = new Vector();
+            for (int j = 0; j < coord4Vec.size(); j++) {
+                String str = coord4Vec.get(j).toString();
+                String[] ps = str.substring(1,str.length()-1).split(" ");
 
-
-        //door
-        pattern = Pattern.compile(PATTERN_COORD4);
-        matcher = pattern.matcher(tuple);
-        while(matcher.find()){
-            String temp = matcher.group();
-            Pattern p = Pattern.compile(PATTERN_DOUBLE);
-            Matcher m = p.matcher(temp);
-            double xy[] = new double[4];
-            int j = 0;
-            while (m.find()){
-                xy[j++] = Double.valueOf(m.group());
+                Point3d sp3d = new Point3d(Double.valueOf(ps[0]), Double.valueOf(ps[1]),
+                        ((Point3d)((Vector)this.circleVec.get(0)).get(0)).getZ());
+                Point3d ep3d = new Point3d(Double.valueOf(ps[2]), Double.valueOf(ps[3]),
+                        ((Point3d)((Vector)this.circleVec.get(0)).get(0)).getZ());
+                this.doorVec.add(sp3d);
+                this.doorVec.add(ep3d);
             }
-            Point3d p3d1 = new Point3d(xy[0],xy[1],this.height);
-            Point3d p3d2 = new Point3d(xy[2],xy[3],this.height);
-            this.doorCoords.add(p3d1);
-            this.doorCoords.add(p3d2);
         }
     }
 
-    public Shape3D createRoom(){
-        int[] strips = new int[1];
-        strips[0] = this.roomCoords.size()+1;
-        Point3d[] arr_p3d = new Point3d[this.roomCoords.size()+1];
-        Point3d p3d0 = new Point3d((Point3d) this.roomCoords.get(0));
-        for(int i=0;i<this.roomCoords.size();i++){
-            Point3d p3d = (Point3d) this.roomCoords.get(i);
-            MapFunction(p3d, TDViewer.min, TDViewer.max);
-            arr_p3d[i] = new Point3d(p3d.x, p3d.y, p3d.z);
+    public Vector getCommpents(String str){
+        String t = "";
+        Vector vector = new Vector(5,1);
+
+        char[] tmpChar = str.toCharArray();
+        int ind = 1;
+
+        for (int i = 1; i < tmpChar.length-1; i++) {
+            if (tmpChar[i] == '(') {
+                ind++;
+            } else if (tmpChar[i] == ')') {
+                ind--;
+            }
+
+            t += tmpChar[i];
+
+            if (ind == 1) {
+                t = t.trim();
+                if(t.length()!=0){
+                    vector.add(t);
+                }
+                t = "";
+            }
         }
-        MapFunction(p3d0, TDViewer.min, TDViewer.max);
-        arr_p3d[arr_p3d.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
-
-        ColoringAttributes colorAttr = new ColoringAttributes();
-        colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-        colorAttr.setColor(1.0f, 1.0f, 0.0f);
-
-        LineAttributes lineAttr = new LineAttributes();
-        lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
-        lineAttr.setLineWidth(2.0f);
-        lineAttr.setLinePattern(0);
-        lineAttr.setLineAntialiasingEnable(true);
-
-        Appearance appear = new Appearance();
-        appear.setColoringAttributes(colorAttr);
-        appear.setLineAttributes(lineAttr);
-
-        LineStripArray line = new LineStripArray(arr_p3d.length,LineArray.COORDINATES,strips);
-        line.setCoordinates(0, arr_p3d);
-        line.setCapability(Geometry.ALLOW_INTERSECT);
-
-        Shape3D structure = new Shape3D(line,appear);
-
-        return structure;
-    }
-    public Shape3D createDoor(){
-        Point3d[] arr_p3d = new Point3d[this.doorCoords.size()];
-        for(int i=0;i<this.doorCoords.size();i++){
-            Point3d p3d = (Point3d) this.doorCoords.get(i);
-            MapFunction(p3d, TDViewer.min,TDViewer.max);
-            arr_p3d[i] = new Point3d(p3d.x,p3d.y,p3d.z);
-        }
-
-        //door
-        ColoringAttributes colorAttr = new ColoringAttributes();
-        colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-        colorAttr.setColor(0.0f, 0.0f, 1.0f);
-
-        LineAttributes lineAttr = new LineAttributes();
-        lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
-        lineAttr.setLineWidth(4.0f);
-        lineAttr.setLinePattern(0);
-        lineAttr.setLineAntialiasingEnable(true);
-
-        Appearance appear = new Appearance();
-        appear.setColoringAttributes(colorAttr);
-        appear.setLineAttributes(lineAttr);
-
-        LineArray line = new LineArray(arr_p3d.length,LineArray.COORDINATES);
-        line.setCoordinates(0, arr_p3d);
-        line.setCapability(Geometry.ALLOW_INTERSECT);
-
-        Shape3D structure = new Shape3D(line,appear);
-
-        return structure;
+        return vector;
     }
 
-    public void MapFunction(Point3d p, Point3d min, Point3d max) {
-        Double minx = new Double(min.x);
-        Double miny = new Double(min.y);
-        Double minz = new Double(min.z);
-        Double maxx = new Double(max.x);
-        Double maxy = new Double(max.y);
-        Double maxz = new Double(max.z);
-        if (maxx.compareTo(minx) > 0) {
-            double range = max.x - min.x;
-            p.x = 2 * (p.x - min.x) / range - 1.0;
-        } else
-            p.x = 0.0f;
+    public int getPattern_Integer(String str){
+        String PATTERN_Number = "\\d+";
 
-        if (maxy.compareTo(miny) > 0) {
-            double range = max.y - min.y;
-            p.y = 2 * (p.y - min.y) / range - 1.0;
-        } else
-            p.y = 0.0f;
+        Pattern pattern = Pattern.compile(PATTERN_Number);
+        Matcher matcher = pattern.matcher(str);
+        Boolean rs = matcher.find();
 
-        if (maxz.compareTo(minz) > 0) {
-            double range = max.z - min.z;
-            p.z = 2 * (p.z - min.z) / range - 1.0;
-        } else
-            p.z = 0.0f;
+        int result = Integer.valueOf(matcher.group());
+
+        return result;
+    }
+    public String getPattern_String(String str){
+        String PATTERN_STRING = "\"[^\"]+\"";
+
+        Pattern pattern = Pattern.compile(PATTERN_STRING);
+        Matcher matcher = pattern.matcher(str);
+        Boolean rs = matcher.find();
+
+        String string = String.valueOf(matcher.group());
+        string = string.substring(1, string.length()-1).trim();
+
+        return string;
+    }
+    public double getPAttern_Double(String str){
+        String PATTERN_DOUBLE = "\\d+\\.\\d";
+
+        Pattern pattern = Pattern.compile(PATTERN_DOUBLE);
+        Matcher matcher = pattern.matcher(str);
+        Boolean rs = matcher.find();
+
+        double result = Double.valueOf(matcher.group());
+
+        return result;
+    }
+    public Vector getPAttern_Coord2(String str){
+        Vector vector = new Vector(4,1);
+        String PATTERN_COORD2 = "\\(\\d+\\.\\d+\\s\\d+\\.\\d+\\)";
+        Pattern pattern = Pattern.compile(PATTERN_COORD2);
+        Matcher matcher = pattern.matcher(str);
+        while(matcher.find()){
+            vector.add(matcher.group());
+        }
+        return vector;
+    }
+    public Vector getPAttern_Coord4(String str){
+        Vector vector = new Vector(4,1);
+        String PATTERN_COORD4 = "\\((\\d+\\.\\d+\\s){3,}\\d+\\.\\d+\\)";
+        Pattern pattern = Pattern.compile(PATTERN_COORD4);
+        Matcher matcher = pattern.matcher(str);
+        while(matcher.find()){
+            vector.add(matcher.group());
+        }
+        return vector;
     }
 
     @Override
@@ -187,9 +166,8 @@ public class FloorRoom {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", type='" + type + '\'' +
-                ", height=" + height +
-                ", roomCoords=" + roomCoords +
-                ", doorCoords=" + doorCoords +
+                ", roomCoords='" + roomCoords + '\'' +
+                ", doorCoords='" + doorCoords + '\'' +
                 '}';
     }
 
@@ -211,22 +189,16 @@ public class FloorRoom {
     public void setType(String type) {
         this.type = type;
     }
-    public double getHeight() {
-        return height;
-    }
-    public void setHeight(double height) {
-        this.height = height;
-    }
-    public Vector getRoomCoords() {
+    public String getRoomCoords() {
         return roomCoords;
     }
-    public void setRoomCoords(Vector roomCoords) {
+    public void setRoomCoords(String roomCoords) {
         this.roomCoords = roomCoords;
     }
-    public Vector getDoorCoords() {
+    public String getDoorCoords() {
         return doorCoords;
     }
-    public void setDoorCoords(Vector doorCoords) {
+    public void setDoorCoords(String doorCoords) {
         this.doorCoords = doorCoords;
     }
 }

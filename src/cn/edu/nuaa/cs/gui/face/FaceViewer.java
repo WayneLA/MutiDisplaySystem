@@ -8,7 +8,6 @@ import javax.swing.*;
 
 import cn.edu.nuaa.cs.chart.DoubleXYLineChartPanel;
 import cn.edu.nuaa.cs.chart.SingleXYLineChartPanel;
-import cn.edu.nuaa.cs.gui.main.MainWindow;
 import cn.edu.nuaa.cs.io.FileHelper;
 import org.jfree.chart.ChartPanel;
 
@@ -115,7 +114,7 @@ public class FaceViewer extends JPanel implements Runnable{
 				continue;
 			}else{
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(3000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -138,6 +137,7 @@ public class FaceViewer extends JPanel implements Runnable{
 
 		for (int i = 1; i < contents.size(); i++) {
 			String[] tuple = contents.get(i).trim().split("\\s+");
+
 			FRAME_NUM[i-1] = Integer.valueOf(tuple[0]);
 			GMT_S[i-1] = Long.valueOf(tuple[1]);
 			BLINKING[i-1] = Double.valueOf(tuple[2]);
