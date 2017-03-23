@@ -1,5 +1,6 @@
 package cn.edu.nuaa.cs.gui.indoor;
 
+import cn.edu.nuaa.cs.gui.face.FaceWindow;
 import cn.edu.nuaa.cs.gui.indoor.model.FloorRoom;
 import cn.edu.nuaa.cs.io.FileHelper;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
@@ -17,6 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
@@ -24,7 +26,7 @@ import java.util.Vector;
 /**
  * Created by 85492 on 2017/2/28.
  */
-public class TDViewer extends JPanel {
+public class TDViewer extends JPanel implements Runnable {
     private static SimpleUniverse simpleUniverse;
     private static Canvas3D canvas3d;
     private static BranchGroup branchGroup = new BranchGroup();
@@ -39,6 +41,8 @@ public class TDViewer extends JPanel {
     public static Point3d max = new Point3d(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
 
     public static String[] viewStrs = {"正视图","侧视图","俯视图"};
+
+    public static String fileName = null;
 
     public TDViewer(){
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
@@ -77,6 +81,9 @@ public class TDViewer extends JPanel {
         initMenu();
 
         initBuilding();
+
+        new Thread(this).start();
+
     }
 
     public void initMenu(){
@@ -157,9 +164,9 @@ public class TDViewer extends JPanel {
         for (int i = 0; i < Rooms.size(); i++) {
             FloorRoom room = (FloorRoom) Rooms.get(i);
             tg.addChild(createRoomTG(room.circleVec));
-            if(room.doorVec.size()!=0){
-                tg.addChild(createDoorTG(room.doorVec));
-            }
+//            if(room.doorVec.size()!=0){
+//                tg.addChild(createDoorTG(room.doorVec));
+//            }
         }
         return tg;
     }
@@ -274,9 +281,6 @@ public class TDViewer extends JPanel {
         transformGroup.setTransform(tran);
     }
 
-
-
-
     public void createMouseBehavior(BranchGroup bg, TransformGroup tg){
         bg.detach();
 
@@ -324,5 +328,131 @@ public class TDViewer extends JPanel {
             p.z = 2 * (p.z - min.z) / range - 1.0;
         } else
             p.z = 0.0f;
+    }
+
+    public void paintRoom(Vector circle){
+        TransformGroup tg = new TransformGroup();
+        if(circle!=null){
+            int[] strips = {circle.size()+1};
+            Point3d[] p3dArray = new Point3d[strips[0]];
+
+            for (int j = 0; j < circle.size(); j++) {
+                Point3d p3d = new Point3d((Point3d) circle.get(j));
+                MapFunction(p3d, min, max);
+                p3dArray[j] = new Point3d(p3d.x, p3d.y, p3d.z);
+            }
+            Point3d p3d0 = new Point3d((Point3d)circle.get(0));
+            MapFunction(p3d0, min, max);
+            p3dArray[p3dArray.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
+
+            ColoringAttributes colorAttr = new ColoringAttributes();
+            colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+            colorAttr.setColor(1.0f, 0.0f, 0.0f);
+
+            LineAttributes lineAttr = new LineAttributes();
+            lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+            lineAttr.setLineWidth(3.0f);
+            lineAttr.setLinePattern(0);
+            lineAttr.setLineAntialiasingEnable(true);
+
+            Appearance appear = new Appearance();
+            appear.setColoringAttributes(colorAttr);
+            appear.setLineAttributes(lineAttr);
+
+            LineStripArray line = new LineStripArray(p3dArray.length,LineArray.COORDINATES,strips);
+            line.setCoordinates(0, p3dArray);
+            line.setCapability(Geometry.ALLOW_INTERSECT);
+
+            Shape3D structure = new Shape3D(line,appear);
+            tg.addChild(structure);
+        }
+        branchGroup.detach();
+        TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+        tgRoot.addChild(tg);
+
+        if(branchGroup.getParent()==null){
+            simpleUniverse.addBranchGraph(branchGroup);
+        }
+    }
+
+    public Vector getInsideCircle(Point3d p3d){
+        Vector circle = new Vector();
+        for (int i = 0; i < Rooms.size(); i++) {
+            Vector circleVec = ((FloorRoom) Rooms.get(i)).circleVec;
+            for (int j = 0; j < circleVec.size(); j++) {
+                circle = (Vector) circleVec.get(j);
+                if(isInside(p3d,circle)){
+                    return circle;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 该算法思想是从点出发向右水平做一条射线，计算该射线与多边形的边的相交点个数，
+     * 当点不在多边形边上时，如果是奇数，那么点就一定在多边形内部，否则，在外部。
+     */
+    public boolean isInside(Point3d p3d, Vector circle){
+        int count = 0;
+        if(p3d.z >= ((Point3d)(circle.get(0))).z &&
+                p3d.z <= ((Point3d)(circle.get(0))).z+3){
+            for (int i = 0; i < circle.size(); i++) {
+                Point3d p3d1 = (Point3d) circle.get(i);
+                Point3d p3d2 = i==circle.size()-1 ? (Point3d) circle.get(0):(Point3d) circle.get(i+1);
+
+                if((p3d.y>p3d1.y && p3d.y<=p3d2.y)
+                        ||(p3d.y>p3d2.y && p3d.y<=p3d1.y)){
+                    double t = (p3d.y-p3d1.y)/(p3d2.y-p3d1.y);
+                    double xt = p3d1.x+t*(p3d2.x-p3d1.x);
+                    if(p3d.x==xt)
+                        return false;
+                    if(p3d.x<xt)
+                        ++count;
+                }
+            }
+        }
+        else{
+            return false;
+        }
+        if(count%2==0){
+            return false;
+        }
+        return true;
+    }
+
+
+    @Override
+    public void run(){
+        while(true){
+            if(fileName!=null){
+                System.out.println(">>>    "+fileName);
+                Vector<Point3d> p3dVec = getContent();
+                for (int i = 0; i < p3dVec.size(); i++) {
+                    Vector circle = getInsideCircle(p3dVec.get(i));
+                    paintRoom(circle);
+                }
+                continue;
+            }else{
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static Vector<Point3d> getContent() {
+        Vector<Point3d> vector = new Vector<Point3d>(5,1);
+        File file = new File(IndoorWindow.locationPath + fileName);
+        ArrayList<String> contents = FileHelper.readFileByLine(file);
+        for (int i = 0; i < contents.size(); i++) {
+            String[] coords = contents.get(i).split(" ");
+            Point3d p3d = new Point3d(Double.valueOf(coords[0]),Double.valueOf(coords[1]),Double.valueOf(coords[2]));
+            vector.add(p3d);
+        }
+        fileName = null;
+        return vector;
     }
 }

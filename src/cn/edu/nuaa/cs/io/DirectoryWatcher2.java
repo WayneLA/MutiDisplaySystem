@@ -3,17 +3,17 @@ package cn.edu.nuaa.cs.io;
 /**
  * Created by 85492 on 2017/3/8.
  */
-import cn.edu.nuaa.cs.gui.face.FaceViewer;
-import sun.reflect.Reflection;
+
+import cn.edu.nuaa.cs.gui.indoor.TDViewer;
 
 import java.io.IOException;
 import java.nio.file.*;
 
-public class DirectoryWatcher implements Runnable {
+public class DirectoryWatcher2 implements Runnable {
     private final Path path; // 监控目录
     private final WatchService watchService;
 
-    public DirectoryWatcher(Path path) {
+    public DirectoryWatcher2(Path path) {
         this.path = path;
         try {
             this.watchService = FileSystems.getDefault().newWatchService();
@@ -25,8 +25,8 @@ public class DirectoryWatcher implements Runnable {
     @Override
     public void run() {
         try {
-            path.register(watchService,
-                    StandardWatchEventKinds.ENTRY_CREATE);
+            path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+            path.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
         } catch (IOException e) {
             throw new RuntimeException("注册监控事件出错", e);
         }
@@ -59,9 +59,11 @@ public class DirectoryWatcher implements Runnable {
             if (StandardWatchEventKinds.OVERFLOW.equals(kind)) {
                 continue;
             }
-//            System.out.println("事件：" + event.kind() + "，" + "文件名：" + event.context());
 
-            FaceViewer.curFileName = event.context().toString();
+            System.out.println("事件：" + event.kind() + "，" + "文件名：" + event.context());
+
+            TDViewer.fileName = event.context().toString();
+
         }
         // 重置并继续监控
         return signal.reset();
