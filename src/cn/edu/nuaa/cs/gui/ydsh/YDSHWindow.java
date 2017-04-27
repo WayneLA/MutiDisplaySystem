@@ -1,11 +1,13 @@
 package cn.edu.nuaa.cs.gui.ydsh;
 
+import cn.edu.nuaa.cs.gui.main.MainWindow;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 public class YDSHWindow extends JPanel {
-	public static String dirPath = "F:\\Data\\ydsh";
+	public static String dirPath = MainWindow.rootPath+"\\YDSH";
 
 	public YDSHWindow(){
 		setLayout(new BorderLayout());

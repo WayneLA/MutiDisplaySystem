@@ -1,5 +1,6 @@
 package cn.edu.nuaa.cs.gui.indoor;
 
+import cn.edu.nuaa.cs.gui.main.MainWindow;
 import cn.edu.nuaa.cs.io.DirectoryWatcher2;
 
 import java.awt.*;
@@ -9,8 +10,8 @@ import java.nio.file.Paths;
 import javax.swing.*;
 
 public class IndoorWindow extends JPanel {
-	public static String fileName = "F:\\Data\\Indoor\\building\\fernuni.dat";
-	public static String locationPath = "F:\\Data\\Indoor\\location\\";
+	public static String fileName = MainWindow.rootPath+"\\Indoor\\building\\fernuni.dat";
+	public static String locationPath = MainWindow.rootPath+"\\Indoor\\location\\";
 	public static Thread watchThread2;
 
 	public IndoorWindow(){

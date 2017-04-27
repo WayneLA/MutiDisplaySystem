@@ -1,6 +1,5 @@
 package cn.edu.nuaa.cs.gui.indoor;
 
-import cn.edu.nuaa.cs.gui.face.FaceWindow;
 import cn.edu.nuaa.cs.gui.indoor.model.FloorRoom;
 import cn.edu.nuaa.cs.io.FileHelper;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
@@ -20,7 +19,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Vector;
 
 /**
@@ -67,7 +65,7 @@ public class TDViewer extends JPanel implements Runnable {
         branchGroup.addChild(light);
 
         //background
-		Color3f bgColor = new Color3f(1.0f, 1.0f, 1.0f);
+		Color3f bgColor = new Color3f(0.0f, 0.0f, 0.0f);
 		Background bg = new Background(bgColor);
 		bg.setApplicationBounds(bounds);
 		branchGroup.addChild(bg);

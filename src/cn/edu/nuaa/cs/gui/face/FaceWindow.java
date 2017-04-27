@@ -1,5 +1,6 @@
 package cn.edu.nuaa.cs.gui.face;
 
+import cn.edu.nuaa.cs.gui.main.MainWindow;
 import cn.edu.nuaa.cs.io.DirectoryWatcher;
 
 import java.awt.*;
@@ -9,7 +10,7 @@ import java.nio.file.Paths;
 import javax.swing.*;
 
 public class FaceWindow extends JPanel{
-	public static String faceLabPath = "F:/Data/FaceLab/";
+	public static String faceLabPath = MainWindow.rootPath+"\\FaceLab\\";
 	public static Thread watchThread;
 
 	public FaceWindow(){
