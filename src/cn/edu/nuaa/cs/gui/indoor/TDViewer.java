@@ -364,14 +364,19 @@ public class TDViewer extends JPanel implements Runnable {
             Shape3D structure = new Shape3D(line,appear);
             tg.addChild(structure);
         }
+
         branchGroup.detach();
         TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+        if(tgRoot.numChildren()>1){
+            tgRoot.removeChild(1);
+        }
         tgRoot.addChild(tg);
 
         if(branchGroup.getParent()==null){
             simpleUniverse.addBranchGraph(branchGroup);
         }
     }
+
 
     public Vector getInsideCircle(Point3d p3d){
         Vector circle = new Vector();
