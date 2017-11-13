@@ -15,7 +15,7 @@ public class FaceWindow extends JPanel{
 
 	public FaceWindow(){
 		setLayout(new BorderLayout());
-		JLabel JL_title = new JLabel("眼动仪数据显示窗口", SwingConstants.LEFT);
+		JLabel JL_title = new JLabel("目标对象眼动仪数据显示窗口", SwingConstants.LEFT);
 		JL_title.setFont(new java.awt.Font("宋体", Font.BOLD,20));
 		JL_title.setBackground(Color.lightGray);
 		JL_title.setOpaque(true);

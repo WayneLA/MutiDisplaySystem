@@ -80,7 +80,7 @@ public class YDSHViewer extends JPanel{
                     XYDataset dataset = createXYDataset(xyseries1, xyseries2);
                     DoubleXYLineChartPanel chart = new DoubleXYLineChartPanel(
                             name+" - 运动手环数据","","步数",
-                            dataset,350,200);
+                            dataset,250,200);
 
                     tabbedPane.add(name, chart.getChartPanel());
                 }

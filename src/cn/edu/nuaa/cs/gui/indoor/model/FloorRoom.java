@@ -22,9 +22,7 @@ public class FloorRoom {
 
     public FloorRoom(String tuple){
         this.id = getPattern_Integer(tuple);
-
         this.name = getPattern_String(tuple);
-
         String temp = tuple.replaceAll("\"s*"+this.name+"\"s*", "");
         this.type = getPattern_String(temp);
 

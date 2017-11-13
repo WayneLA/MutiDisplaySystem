@@ -2,6 +2,7 @@ package cn.edu.nuaa.cs.gui.indoor;
 
 import cn.edu.nuaa.cs.gui.indoor.model.FloorRoom;
 import cn.edu.nuaa.cs.io.FileHelper;
+import cn.edu.nuaa.cs.io.HTMLHelper;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
 import com.sun.j3d.utils.behaviors.mouse.MouseWheelZoom;
@@ -18,8 +19,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by 85492 on 2017/2/28.
@@ -34,6 +39,7 @@ public class TDViewer extends JPanel implements Runnable {
 
     private boolean min_max_init = false;
     public static Vector Rooms = new Vector(5,5);
+    public static Vector RedRooms = new Vector(5,5);
 
     public static Point3d min = new Point3d(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
     public static Point3d max = new Point3d(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
@@ -41,6 +47,11 @@ public class TDViewer extends JPanel implements Runnable {
     public static String[] viewStrs = {"正视图","侧视图","俯视图"};
 
     public static String fileName = null;
+
+//    public static Point3d curP3d = new Point3d(0.0,0.0,0.0);
+    public static Point3d curP3d = null;
+
+    public static HTMLHelper htmlHelper = new HTMLHelper();
 
     public TDViewer(){
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
@@ -79,6 +90,7 @@ public class TDViewer extends JPanel implements Runnable {
         initMenu();
 
         initBuilding();
+        initRedRooms();
 
         new Thread(this).start();
 
@@ -157,11 +169,64 @@ public class TDViewer extends JPanel implements Runnable {
         }
     }
 
+    public void initRedRooms(){
+        File[] files = new File(IndoorWindow.redroomsPath).listFiles();
+        for(int s=0;s<files.length;s++){
+            TransformGroup tg = new TransformGroup();
+            ArrayList<String> tuples = FileHelper.readRoomTuple(files[s].getAbsolutePath());
+            for(int i=0;i<tuples.size();i++){
+                String tuple = tuples.get(i).trim();
+                FloorRoom room = new FloorRoom(tuple);
+                RedRooms.add(room);
+            }
+            if(!min_max_init){
+                for (int i = 0; i < RedRooms.size(); i++) {
+                    Vector circleVec = ((FloorRoom) RedRooms.get(i)).circleVec;
+                    for (int j = 0; j < circleVec.size(); j++) {
+                        Vector p3dVec = (Vector) circleVec.get(j);
+                        for (int k = 0; k < p3dVec.size(); k++) {
+                            Point3d p3d = (Point3d) p3dVec.get(k);
+                            min.x = p3d.x < min.x ? p3d.x : min.x;
+                            min.y = p3d.y < min.y ? p3d.y : min.y;
+                            min.z = p3d.z < min.z ? p3d.z : min.z;
+                            max.x = p3d.x > max.x ? p3d.x : max.x;
+                            max.y = p3d.y > max.y ? p3d.y : max.y;
+                            max.z = p3d.z > max.z ? p3d.x : max.z;
+                        }
+                    }
+                }
+            }
+            tg.addChild(createRedBuilding());
+
+            branchGroup.detach();
+            TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+            tgRoot.addChild(tg);
+
+            //set front viewer
+            setViewer(viewStrs[0]);
+
+            if(branchGroup.getParent()==null){
+                simpleUniverse.addBranchGraph(branchGroup);
+            }
+        }
+    }
+
     public TransformGroup createBuilding(){
         TransformGroup tg = new TransformGroup();
         for (int i = 0; i < Rooms.size(); i++) {
             FloorRoom room = (FloorRoom) Rooms.get(i);
             tg.addChild(createRoomTG(room.circleVec));
+//            if(room.doorVec.size()!=0){
+//                tg.addChild(createDoorTG(room.doorVec));
+//            }
+        }
+        return tg;
+    }
+    public TransformGroup createRedBuilding(){
+        TransformGroup tg = new TransformGroup();
+        for (int i = 0; i < RedRooms.size(); i++) {
+            FloorRoom room = (FloorRoom) RedRooms.get(i);
+            tg.addChild(createRedRoomTG(room.circleVec));
 //            if(room.doorVec.size()!=0){
 //                tg.addChild(createDoorTG(room.doorVec));
 //            }
@@ -188,6 +253,48 @@ public class TDViewer extends JPanel implements Runnable {
             ColoringAttributes colorAttr = new ColoringAttributes();
             colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
             colorAttr.setColor(1.0f, 1.0f, 0.0f);
+
+            LineAttributes lineAttr = new LineAttributes();
+            lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+            lineAttr.setLineWidth(1.0f);
+            lineAttr.setLinePattern(0);
+            lineAttr.setLineAntialiasingEnable(true);
+
+            Appearance appear = new Appearance();
+            appear.setColoringAttributes(colorAttr);
+            appear.setLineAttributes(lineAttr);
+
+            LineStripArray line = new LineStripArray(p3dArray.length,LineArray.COORDINATES,strips);
+            line.setCoordinates(0, p3dArray);
+            line.setCapability(Geometry.ALLOW_INTERSECT);
+
+            Shape3D structure = new Shape3D(line,appear);
+
+            tg.addChild(structure);
+        }
+
+        return tg;
+    }
+    public TransformGroup createRedRoomTG(Vector circleVec){
+        TransformGroup tg = new TransformGroup();
+        for (int i = 0; i < circleVec.size(); i++) {
+            Vector circle = (Vector) circleVec.get(i);
+
+            int[] strips = {circle.size()+1};
+            Point3d[] p3dArray = new Point3d[strips[0]];
+
+            for (int j = 0; j < circle.size(); j++) {
+                Point3d p3d = new Point3d((Point3d) circle.get(j));
+                MapFunction(p3d, min, max);
+                p3dArray[j] = new Point3d(p3d.x, p3d.y, p3d.z);
+            }
+            Point3d p3d0 = new Point3d((Point3d)circle.get(0));
+            MapFunction(p3d0, min, max);
+            p3dArray[p3dArray.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
+
+            ColoringAttributes colorAttr = new ColoringAttributes();
+            colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+            colorAttr.setColor(1.0f, 0.0f, 0.0f);
 
             LineAttributes lineAttr = new LineAttributes();
             lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
@@ -242,6 +349,96 @@ public class TDViewer extends JPanel implements Runnable {
 
         tg.addChild(structure);
 
+        return tg;
+    }
+
+
+    public TransformGroup create3DLine(Point3d p3d){
+        TransformGroup tg = null;
+        ColoringAttributes colorAttr = new ColoringAttributes();
+        colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+        colorAttr.setColor(0.0f, 0.0f, 1.0f);
+
+        LineAttributes lineAttr = new LineAttributes();
+        lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+        lineAttr.setLineWidth(2.0f);
+        lineAttr.setLinePattern(1);
+        lineAttr.setLineAntialiasingEnable(true);
+
+        Appearance appear = new Appearance();
+        appear.setColoringAttributes(colorAttr);
+        appear.setLineAttributes(lineAttr);
+
+        if(curP3d!=null){
+            tg = new TransformGroup();
+
+            MapFunction(p3d, min, max);
+            Point3d p = new Point3d(p3d.x, p3d.y, p3d.z);
+            Point3d[] p3dArray = new Point3d[]{curP3d, p};
+            curP3d = p;
+
+            LineArray line = new LineArray(p3dArray.length, LineArray.COORDINATES);
+            line.setCoordinates(0, p3dArray);
+            line.setCapability(Geometry.ALLOW_INTERSECT);
+            Shape3D structure = new Shape3D(line, appear);
+            tg.addChild(structure);
+        }else{
+            MapFunction(p3d, min, max);
+            curP3d = new Point3d(p3d.x, p3d.y, p3d.z);
+        }
+        return tg;
+    }
+    public void paintTrajectory(TransformGroup tg){
+        branchGroup.detach();
+        TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+        if(tg!=null){
+            tgRoot.addChild(tg);
+        }
+        if(branchGroup.getParent()==null){
+            simpleUniverse.addBranchGraph(branchGroup);
+        }
+    }
+
+    public TransformGroup createCurRoom(Vector circleVec){
+        TransformGroup tg = new TransformGroup();
+        if(circleVec!=null){
+            for(int i=0;i<circleVec.size();i++){
+                Vector circle = (Vector)circleVec.get(i);
+                int[] strips = {circle.size()+1};
+                Point3d[] p3dArray = new Point3d[strips[0]];
+
+                for (int j = 0; j < circle.size(); j++) {
+                    Point3d p3d = new Point3d((Point3d) circle.get(j));
+                    MapFunction(p3d, min, max);
+                    p3dArray[j] = new Point3d(p3d.x, p3d.y, p3d.z);
+                }
+                Point3d p3d0 = new Point3d((Point3d)circle.get(0));
+                MapFunction(p3d0, min, max);
+                p3dArray[p3dArray.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
+
+                ColoringAttributes colorAttr = new ColoringAttributes();
+                colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+                //colorAttr.setColor(1.0f, 0.0f, 0.0f);//
+                colorAttr.setColor(0.0f, 1.0f, 0.0f);
+
+                LineAttributes lineAttr = new LineAttributes();
+                lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+                lineAttr.setLineWidth(3.0f);
+                lineAttr.setLinePattern(0);
+                lineAttr.setLineAntialiasingEnable(true);
+
+                Appearance appear = new Appearance();
+                appear.setColoringAttributes(colorAttr);
+                appear.setLineAttributes(lineAttr);
+
+                LineStripArray line = new LineStripArray(p3dArray.length,LineArray.COORDINATES,strips);
+                line.setCoordinates(0, p3dArray);
+                line.setCapability(Geometry.ALLOW_INTERSECT);
+
+                Shape3D structure = new Shape3D(line,appear);
+                tg.addChild(structure);
+            }
+        }
         return tg;
     }
 
@@ -328,63 +525,66 @@ public class TDViewer extends JPanel implements Runnable {
             p.z = 0.0f;
     }
 
-    public void paintRoom(Vector circle){
+    public void paintRoom(Vector circleVec){
         TransformGroup tg = new TransformGroup();
-        if(circle!=null){
-            int[] strips = {circle.size()+1};
-            Point3d[] p3dArray = new Point3d[strips[0]];
+        if(circleVec!=null){
+            for(int i=0;i<circleVec.size();i++){
+                Vector circle = (Vector)circleVec.get(i);
+                int[] strips = {circle.size()+1};
+                Point3d[] p3dArray = new Point3d[strips[0]];
 
-            for (int j = 0; j < circle.size(); j++) {
-                Point3d p3d = new Point3d((Point3d) circle.get(j));
-                MapFunction(p3d, min, max);
-                p3dArray[j] = new Point3d(p3d.x, p3d.y, p3d.z);
+                for (int j = 0; j < circle.size(); j++) {
+                    Point3d p3d = new Point3d((Point3d) circle.get(j));
+                    MapFunction(p3d, min, max);
+                    p3dArray[j] = new Point3d(p3d.x, p3d.y, p3d.z);
+                }
+                Point3d p3d0 = new Point3d((Point3d)circle.get(0));
+                MapFunction(p3d0, min, max);
+                p3dArray[p3dArray.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
+
+                ColoringAttributes colorAttr = new ColoringAttributes();
+                colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+                //colorAttr.setColor(1.0f, 0.0f, 0.0f);//
+                colorAttr.setColor(0.0f, 1.0f, 0.0f);
+
+                LineAttributes lineAttr = new LineAttributes();
+                lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+                lineAttr.setLineWidth(3.0f);
+                lineAttr.setLinePattern(0);
+                lineAttr.setLineAntialiasingEnable(true);
+
+                Appearance appear = new Appearance();
+                appear.setColoringAttributes(colorAttr);
+                appear.setLineAttributes(lineAttr);
+
+                LineStripArray line = new LineStripArray(p3dArray.length,LineArray.COORDINATES,strips);
+                line.setCoordinates(0, p3dArray);
+                line.setCapability(Geometry.ALLOW_INTERSECT);
+
+                Shape3D structure = new Shape3D(line,appear);
+                tg.addChild(structure);
             }
-            Point3d p3d0 = new Point3d((Point3d)circle.get(0));
-            MapFunction(p3d0, min, max);
-            p3dArray[p3dArray.length-1] = new Point3d(p3d0.x, p3d0.y, p3d0.z);
 
-            ColoringAttributes colorAttr = new ColoringAttributes();
-            colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-            colorAttr.setColor(1.0f, 0.0f, 0.0f);
-
-            LineAttributes lineAttr = new LineAttributes();
-            lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
-            lineAttr.setLineWidth(3.0f);
-            lineAttr.setLinePattern(0);
-            lineAttr.setLineAntialiasingEnable(true);
-
-            Appearance appear = new Appearance();
-            appear.setColoringAttributes(colorAttr);
-            appear.setLineAttributes(lineAttr);
-
-            LineStripArray line = new LineStripArray(p3dArray.length,LineArray.COORDINATES,strips);
-            line.setCoordinates(0, p3dArray);
-            line.setCapability(Geometry.ALLOW_INTERSECT);
-
-            Shape3D structure = new Shape3D(line,appear);
-            tg.addChild(structure);
         }
 
         branchGroup.detach();
         TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
-        if(tgRoot.numChildren()>1){
-            tgRoot.removeChild(1);
+        if(tgRoot.numChildren()>2) {
+            tgRoot.removeChild(tgRoot.numChildren() - 1);
         }
         tgRoot.addChild(tg);
-
         if(branchGroup.getParent()==null){
             simpleUniverse.addBranchGraph(branchGroup);
         }
     }
 
-
     public Vector getInsideCircle(Point3d p3d){
-        Vector circle = new Vector();
+        Vector circle;
         for (int i = 0; i < Rooms.size(); i++) {
             Vector circleVec = ((FloorRoom) Rooms.get(i)).circleVec;
             for (int j = 0; j < circleVec.size(); j++) {
                 circle = (Vector) circleVec.get(j);
-                if(isInside(p3d,circle)){
+                if(isInside(p3d, circle)){
                     return circle;
                 }
             }
@@ -427,24 +627,132 @@ public class TDViewer extends JPanel implements Runnable {
 
     @Override
     public void run(){
+//        while(true){
+//            if(fileName!=null){
+//                Vector<Point3d> p3dVec = getContent();
+//                paintTrajectory(create3DLine(p3dVec));
+//
+//                Vector circle = new Vector();
+//                for (int i = 0; i < p3dVec.size(); i++) {
+//                    Vector v = getInsideCircle(p3dVec.get(i));
+//                    if(v!=null){
+//                        for(int j=0;j<RedRooms.size();j++){
+//                            Vector rv = (Vector) ((FloorRoom)RedRooms.get(j)).circleVec.get(0);
+//                            if(v.equals(rv)){
+//                                JOptionPane.showMessageDialog(null, "alert", "alert", JOptionPane.ERROR_MESSAGE);
+//                            }
+//                        }
+//                        circle.add(v);
+//                    }
+//                }
+//                paintRoom(circle);
+//                continue;
+//            }else{
+//                try {
+//                    Thread.sleep(3000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+        String pline = null;
+        String cline = null;
         while(true){
-            if(fileName!=null){
-                System.out.println(">>>    "+fileName);
-                Vector<Point3d> p3dVec = getContent();
-                for (int i = 0; i < p3dVec.size(); i++) {
-                    Vector circle = getInsideCircle(p3dVec.get(i));
-                    paintRoom(circle);
+            try {
+                Thread.sleep(1000);
+                cline = htmlHelper.getUrlData(htmlHelper.urlpath);
+                if(pline!=null && pline.equals(cline))
+                    continue;
+                pline = cline;
+                String PATTERN_Number = "\\d+\\.\\d+\\s\\d+\\.\\d+\\s\\d+\\.\\d+";
+                Pattern pattern = Pattern.compile(PATTERN_Number);
+                Matcher matcher = pattern.matcher(cline);
+                if(matcher.find()){
+                    cline = matcher.group();
+                    //////////转化为房间///////////////////
+                    String[] location = cline.split(" ");
+                    Point3d p3d = new Point3d(Double.valueOf(location[0].trim()),
+                                            Double.valueOf(location[1].trim()),
+                                            Double.valueOf(location[2].trim()));
+
+                    //轨迹
+                    TransformGroup tgline = create3DLine(new Point3d(p3d.getX(),p3d.getY(),p3d.getZ()));
+
+                    //房间
+                    Vector circle = new Vector();
+                    Vector v = getInsideCircle(p3d);
+                    if(v!=null){
+                        for(int j=0;j<RedRooms.size();j++){
+                            Vector rv = (Vector) ((FloorRoom)RedRooms.get(j)).circleVec.get(0);
+                            if(v.equals(rv)){
+                                JOptionPane.showMessageDialog(null, "alert", "alert", JOptionPane.ERROR_MESSAGE);
+                            }else{
+                                break;
+                            }
+                        }
+                        circle.add(v);
+                    }
+                    TransformGroup tgcurroom = createCurRoom(circle);
+
+                    branchGroup.detach();
+                    TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+                    if(tgRoot.numChildren()>2) {
+                        tgRoot.removeChild(tgRoot.numChildren() - 1);
+                    }
+                    tgRoot.addChild(tgline);
+                    tgRoot.addChild(tgcurroom);
+                    if(branchGroup.getParent()==null){
+                        simpleUniverse.addBranchGraph(branchGroup);
+                    }
                 }
-                continue;
-            }else{
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            }catch(Exception e){
+                SimpleDateFormat fat = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+                System.err.println(fat.format(System.currentTimeMillis())+" : "+e.getMessage());
+                //e.printStackTrace();
             }
         }
     }
+
+    public static void paintTestLine(){
+        System.out.println("paintTestLine");
+
+        ColoringAttributes colorAttr = new ColoringAttributes();
+        colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+        colorAttr.setColor(0.0f, 0.0f, 1.0f);
+
+        LineAttributes lineAttr = new LineAttributes();
+        lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+        lineAttr.setLineWidth(2.0f);
+        lineAttr.setLinePattern(1);
+        lineAttr.setLineAntialiasingEnable(true);
+
+        Appearance appear = new Appearance();
+        appear.setColoringAttributes(colorAttr);
+        appear.setLineAttributes(lineAttr);
+
+
+
+        TransformGroup tg = new TransformGroup();
+
+        Point3d p1 = new Point3d(-0.1, -0.2, -0.3);
+        Point3d p2 = new Point3d(0.1, 0.2, 0.3);
+        Point3d[] p3dArray = new Point3d[]{p1, p2};
+
+        LineArray line = new LineArray(p3dArray.length, LineArray.COORDINATES);
+        line.setCoordinates(0, p3dArray);
+        line.setCapability(Geometry.ALLOW_INTERSECT);
+        Shape3D structure = new Shape3D(line, appear);
+        tg.addChild(structure);
+
+
+        branchGroup.detach();
+        TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+        tgRoot.addChild(tg);
+        if(branchGroup.getParent()==null){
+            simpleUniverse.addBranchGraph(branchGroup);
+        }
+    }
+
 
     public static Vector<Point3d> getContent() {
         Vector<Point3d> vector = new Vector<Point3d>(5,1);

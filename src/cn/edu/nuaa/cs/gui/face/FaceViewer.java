@@ -29,7 +29,7 @@ public class FaceViewer extends JPanel implements Runnable{
 	public static SingleXYLineChartPanel sChart_ZYPL;
 
 	private int pulse = 10;
-	private static int j=0;
+//	private static int j=0;
 
 	public FaceViewer() {
 		setLayout(new BorderLayout());
@@ -71,7 +71,7 @@ public class FaceViewer extends JPanel implements Runnable{
 		JPanel jp = new JPanel(new FlowLayout());
 		sChart_ZYCS = new SingleXYLineChartPanel(
 				"眨眼次数变化曲线", "时间", "数值",
-				0, 200, -0.01, 0.1,
+				0, 200, -0.1, 1.1,
 				100,"数值");
 		ChartPanel chart = sChart_ZYCS.getChartPanel();
 		jp.add(chart);
@@ -83,7 +83,7 @@ public class FaceViewer extends JPanel implements Runnable{
 		JPanel jp = new JPanel(new FlowLayout());
 		sChart_ZYPL = new SingleXYLineChartPanel(
 				"眨眼频率变化曲线", "时间", "数值",
-				0, 200, -0.01, 0.1,
+				0, 200, -0.1, 0.51,
 				100,"数值");
 		ChartPanel chart = sChart_ZYPL.getChartPanel();
 		jp.add(chart);

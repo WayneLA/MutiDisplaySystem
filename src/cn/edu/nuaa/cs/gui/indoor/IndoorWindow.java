@@ -10,13 +10,14 @@ import java.nio.file.Paths;
 import javax.swing.*;
 
 public class IndoorWindow extends JPanel {
-	public static String fileName = MainWindow.rootPath+"\\Indoor\\building\\fernuni.dat";
+	public static String fileName = MainWindow.rootPath+"\\Indoor\\building\\building.dat";
 	public static String locationPath = MainWindow.rootPath+"\\Indoor\\location\\";
+	public static String redroomsPath = MainWindow.rootPath+"\\Indoor\\redrooms\\";
 	public static Thread watchThread2;
 
 	public IndoorWindow(){
 		setLayout(new BorderLayout());
-		JLabel JL_title = new JLabel("室内对象显示窗口", SwingConstants.LEFT);
+		JLabel JL_title = new JLabel("目标对象室内位置显示窗口", SwingConstants.LEFT);
 		JL_title.setFont(new java.awt.Font("宋体", Font.BOLD,20));
 		JL_title.setBackground(Color.lightGray);
 		JL_title.setOpaque(true);

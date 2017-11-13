@@ -4,6 +4,7 @@ import java.awt.*;
 import java.nio.file.Paths;
 import javax.swing.*;
 import cn.edu.nuaa.cs.gui.indoor.IndoorWindow;
+import cn.edu.nuaa.cs.gui.shuru.SRWindow;
 import cn.edu.nuaa.cs.gui.ydsh.YDSHWindow;
 import cn.edu.nuaa.cs.gui.face.FaceWindow;
 import cn.edu.nuaa.cs.io.DirectoryWatcher;
@@ -15,6 +16,7 @@ public class MainWindow  extends JFrame{
 	public static JPanel win01 = new JPanel(new BorderLayout());
 	public static JPanel win02 = new JPanel(new BorderLayout());
 	public static JPanel win03 = new JPanel(new BorderLayout());
+	public static JPanel win04 = new JPanel(new BorderLayout());
 
 	private int width = Toolkit.getDefaultToolkit().getScreenSize().width;
 	private int height = Toolkit.getDefaultToolkit().getScreenSize().height;
@@ -58,16 +60,28 @@ public class MainWindow  extends JFrame{
 		win01.add(new IndoorWindow(), BorderLayout.CENTER);
 		win02.add(new FaceWindow(), BorderLayout.CENTER);
 		win03.add(new YDSHWindow(), BorderLayout.CENTER);
-
+		win04.add(new SRWindow(), BorderLayout.CENTER);
+/*
 		JSplitPane jsp1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, win02, win03);
 		jsp1.setEnabled(false);
 		jsp1.setDividerLocation((height-50)/2);
 		JSplitPane jsp2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win01, jsp1);
 		jsp2.setEnabled(false);
-		jsp2.setDividerLocation(width*2/3);
-
+		jsp2.setDividerLocation(width/2);
 		add(jsp2,BorderLayout.CENTER);
+*/
 
+		JSplitPane jsp1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win04, win03);
+		jsp1.setEnabled(true);
+		jsp1.setOneTouchExpandable(true);
+//		jsp1.setDividerLocation(width/2);
+		JSplitPane jsp2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, win02, jsp1);
+		jsp2.setEnabled(false);
+		jsp2.setDividerLocation(height/2);
+		JSplitPane jsp3 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win01, jsp2);
+		jsp3.setEnabled(false);
+		jsp3.setDividerLocation(width/2);
+		add(jsp3,BorderLayout.CENTER);
 	}
 
 	public void initMenu(){
