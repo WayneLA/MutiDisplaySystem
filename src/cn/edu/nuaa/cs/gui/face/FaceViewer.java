@@ -30,6 +30,7 @@ public class FaceViewer extends JPanel implements Runnable{
 
 	private int pulse = 10;
 //	private static int j=0;
+	private static int timeindex=0;
 
 	public FaceViewer() {
 		setLayout(new BorderLayout());
@@ -47,7 +48,7 @@ public class FaceViewer extends JPanel implements Runnable{
 
 		dChart_PUPIL = new DoubleXYLineChartPanel(
 				"左右眼瞳孔直径变化曲线", "时间", "直径/米",
-				0, 200, -0.005, 0.005,
+				0, 200, -0.0005, 0.01,
 				100,"左眼","右眼");
 		ChartPanel chart = dChart_PUPIL.getChartPanel();
 		jp.add(chart);
@@ -92,7 +93,7 @@ public class FaceViewer extends JPanel implements Runnable{
 		return jsp;
 	}
 
-
+/*
 	@Override
 	public void run() {
 		while(true){
@@ -139,6 +140,86 @@ public class FaceViewer extends JPanel implements Runnable{
 			String[] tuple = contents.get(i).trim().split("\\s+");
 
 			FRAME_NUM[i-1] = Integer.valueOf(tuple[0]);
+			GMT_S[i-1] = Long.valueOf(tuple[1]);
+			BLINKING[i-1] = Double.valueOf(tuple[2]);
+			BLINK_FREQ[i-1] = Double.valueOf(tuple[3]);
+			BLINK_DURATION[i-1] = Double.valueOf(tuple[4]);
+			PERCLOS[i-1] = Double.valueOf(tuple[5]);
+			PUPIL_R_DIAM[i-1] = Double.valueOf(tuple[6]);
+			PUPIL_L_DIAM[i-1] = Double.valueOf(tuple[7]);
+		}
+
+		dChart_PUPIL.setValuesx(FRAME_NUM);
+		dChart_PUPIL.setValuesy1(PUPIL_L_DIAM);
+		dChart_PUPIL.setValuesy2(PUPIL_R_DIAM);
+
+		sChart_PLD.setValuesx(FRAME_NUM);
+		sChart_PLD.setValuesy(PERCLOS);
+
+		sChart_ZYCS.setValuesx(FRAME_NUM);
+		sChart_ZYCS.setValuesy(BLINKING);
+
+		sChart_ZYPL.setValuesx(FRAME_NUM);
+		sChart_ZYPL.setValuesy(BLINK_FREQ);
+
+		if (file.isFile() && file.exists()) {
+			file.delete();
+		}
+		curFileName = null;
+	}
+
+*/
+
+	@Override
+	public void run() {
+		while(true){
+			if(curFileName!=null){
+				System.out.println(">>>    "+curFileName);
+				getContent();
+				for (int i = 0; i < FRAME_NUM.length; i++) {
+					dChart_PUPIL.seriesKey1.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy1[i]);
+					dChart_PUPIL.seriesKey2.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy2[i]);
+					sChart_PLD.seriesKey.add(sChart_PLD.valuesx[i], sChart_PLD.valuesy[i]);
+					sChart_ZYCS.seriesKey.add(sChart_ZYCS.valuesx[i], sChart_ZYCS.valuesy[i]);
+					sChart_ZYPL.seriesKey.add(sChart_ZYPL.valuesx[i], sChart_ZYPL.valuesy[i]);
+					try {
+						Thread.sleep(pulse);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				continue;
+			}else{
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+
+	public static void getContent(){
+		File file = new File(FaceWindow.faceLabPath+curFileName);
+		ArrayList<String> contents = FileHelper.readFileByLine(file);
+
+		FRAME_NUM = new int[contents.size()-1];
+		GMT_S = new long[contents.size()-1];
+		BLINKING = new double[contents.size()-1];
+		BLINK_FREQ = new double[contents.size()-1];
+		BLINK_DURATION = new double[contents.size()-1];
+		PERCLOS = new double[contents.size()-1];
+		PUPIL_R_DIAM = new double[contents.size()-1];
+		PUPIL_L_DIAM = new double[contents.size()-1];
+
+		for (int i = 1; i < contents.size(); i++) {
+			String[] tuple = contents.get(i).trim().split("\\s+");
+
+//			FRAME_NUM[i-1] = Integer.valueOf(tuple[0]);
+
+			FRAME_NUM[i-1] = timeindex++;
+
 			GMT_S[i-1] = Long.valueOf(tuple[1]);
 			BLINKING[i-1] = Double.valueOf(tuple[2]);
 			BLINK_FREQ[i-1] = Double.valueOf(tuple[3]);

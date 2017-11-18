@@ -70,8 +70,8 @@ public class MainWindow  extends JFrame{
 		jsp2.setDividerLocation(width/2);
 		add(jsp2,BorderLayout.CENTER);
 */
-
-		JSplitPane jsp1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win04, win03);
+/*
+		JSplitPane jsp1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win04, win04);
 		jsp1.setEnabled(true);
 		jsp1.setOneTouchExpandable(true);
 //		jsp1.setDividerLocation(width/2);
@@ -82,6 +82,25 @@ public class MainWindow  extends JFrame{
 		jsp3.setEnabled(false);
 		jsp3.setDividerLocation(width/2);
 		add(jsp3,BorderLayout.CENTER);
+*/
+		JSplitPane jsp_u = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win02, win04);
+		jsp_u.setOneTouchExpandable(true);
+		jsp_u.setEnabled(true);
+		jsp_u.setDividerLocation(width/4);
+
+		JSplitPane jsp_d = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win03, new JPanel());
+		jsp_d.setOneTouchExpandable(true);
+		jsp_d.setEnabled(true);
+		jsp_d.setDividerLocation(width/4);
+
+		JSplitPane jsp_r = new JSplitPane(JSplitPane.VERTICAL_SPLIT, jsp_u, jsp_d);
+		jsp_r.setEnabled(false);
+		jsp_r.setDividerLocation(height/2);
+
+		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, win01, jsp_r);
+		jsp.setEnabled(false);
+		jsp.setDividerLocation(width/2);
+		add(jsp,BorderLayout.CENTER);
 	}
 
 	public void initMenu(){
