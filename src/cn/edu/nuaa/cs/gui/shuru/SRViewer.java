@@ -2,6 +2,7 @@ package cn.edu.nuaa.cs.gui.shuru;
 
 import cn.edu.nuaa.cs.chart.SingleXYLineChartPanel;
 import cn.edu.nuaa.cs.gui.main.MainWindow;
+import cn.edu.nuaa.cs.gui.main.ZHWindow;
 import cn.edu.nuaa.cs.io.FileHelper;
 import org.jfree.chart.ChartPanel;
 

@@ -1,6 +1,7 @@
 package cn.edu.nuaa.cs.gui.face;
 
 import cn.edu.nuaa.cs.gui.main.MainWindow;
+import cn.edu.nuaa.cs.gui.main.ZHWindow;
 import cn.edu.nuaa.cs.io.DirectoryWatcher;
 
 import java.awt.*;

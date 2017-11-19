@@ -1,6 +1,7 @@
 package cn.edu.nuaa.cs.gui.ydsh;
 
 import cn.edu.nuaa.cs.gui.main.MainWindow;
+import cn.edu.nuaa.cs.gui.main.ZHWindow;
 
 import java.awt.*;
 
