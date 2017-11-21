@@ -122,43 +122,14 @@ public class MainWindow extends JFrame {
     public static JPanel JPanelsMenu(){
         JPanel jp = new BackgroundPanel();
 
-        JLabel jl1 = new JLabel("1、综合显示");
+
+        JLabel jl1 = new JLabel("1、眼动仪监控数据显示");
         jl1.setFont(new java.awt.Font("楷体", 1, 25));
         jl1.setBounds(120,100,800,50);
         jl1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("1、综合显示");
-                JFrame jf = new JFrame();
-                jf.setBounds(0,0, width, height);
-                jf.setLayout(new BorderLayout());
-                jf.add(new ZHWindow(),BorderLayout.CENTER);
-                jf.setVisible(true);
-            }
-        });
-
-        JLabel jl2 = new JLabel("2、室内运动对象运动轨迹显示");
-        jl2.setFont(new java.awt.Font("楷体", 1, 25));
-        jl2.setBounds(120,160,800,50);
-        jl2.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("2、室内运动对象运动轨迹显示");
-                JFrame jf = new JFrame();
-                jf.setBounds(10,10,800,600);
-                jf.setLayout(new BorderLayout());
-                jf.add(win01,BorderLayout.CENTER);
-                jf.setVisible(true);
-            }
-        });
-
-        JLabel jl3 = new JLabel("3、眼动仪监控数据显示");
-        jl3.setFont(new java.awt.Font("楷体", 1, 25));
-        jl3.setBounds(120,220,800,50);
-        jl3.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("3、眼动仪监控数据显示");
+                System.out.println("1、眼动仪监控数据显示");
                 JFrame jf = new JFrame();
                 jf.setBounds(10,10,800,600);
                 jf.setLayout(new BorderLayout());
@@ -167,13 +138,29 @@ public class MainWindow extends JFrame {
             }
         });
 
-        JLabel jl4 = new JLabel("4、运动手环数据显示");
-        jl4.setFont(new java.awt.Font("楷体", 1, 25));
-        jl4.setBounds(120,280,800,50);
-        jl4.addMouseListener(new MouseAdapter() {
+
+        JLabel jl2 = new JLabel("2、输入操作监控显示");
+        jl2.setFont(new java.awt.Font("楷体", 1, 25));
+        jl2.setBounds(120,160,800,50);
+        jl2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("4、运动手环数据显示");
+                System.out.println("2、输入操作监控显示");
+                JFrame jf = new JFrame();
+                jf.setBounds(10,10,800,600);
+                jf.setLayout(new BorderLayout());
+                jf.add(win04,BorderLayout.CENTER);
+                jf.setVisible(true);
+            }
+        });
+
+        JLabel jl3 = new JLabel("3、运动手环数据显示");
+        jl3.setFont(new java.awt.Font("楷体", 1, 25));
+        jl3.setBounds(120,220,800,50);
+        jl3.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                System.out.println("3、运动手环数据显示");
                 JFrame jf = new JFrame();
                 jf.setBounds(10,10,800,600);
                 jf.setLayout(new BorderLayout());
@@ -182,17 +169,32 @@ public class MainWindow extends JFrame {
             }
         });
 
-        JLabel jl5 = new JLabel("5、输入操作监控显示");
+        JLabel jl4 = new JLabel("4、室内运动对象运动轨迹显示");
+        jl4.setFont(new java.awt.Font("楷体", 1, 25));
+        jl4.setBounds(120,280,800,50);
+        jl4.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                System.out.println("4、室内运动对象运动轨迹显示");
+                JFrame jf = new JFrame();
+                jf.setBounds(10,10,800,600);
+                jf.setLayout(new BorderLayout());
+                jf.add(win01,BorderLayout.CENTER);
+                jf.setVisible(true);
+            }
+        });
+
+        JLabel jl5 = new JLabel("5、综合显示");
         jl5.setFont(new java.awt.Font("楷体", 1, 25));
         jl5.setBounds(120,340,800,50);
         jl5.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("5、输入操作监控显示");
+                System.out.println("5、综合显示");
                 JFrame jf = new JFrame();
-                jf.setBounds(10,10,800,600);
+                jf.setBounds(0,0, width, height);
                 jf.setLayout(new BorderLayout());
-                jf.add(win04,BorderLayout.CENTER);
+                jf.add(new ZHWindow(),BorderLayout.CENTER);
                 jf.setVisible(true);
             }
         });
