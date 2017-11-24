@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javax.swing.*;
 
 import cn.edu.nuaa.cs.chart.DoubleXYLineChartPanel;
+import cn.edu.nuaa.cs.chart.DoubleXYLineChartPanel01;
 import cn.edu.nuaa.cs.chart.SingleXYLineChartPanel;
 import cn.edu.nuaa.cs.io.FileHelper;
 import org.jfree.chart.ChartPanel;
@@ -16,27 +17,17 @@ public class FaceViewer extends JPanel implements Runnable{
 
 	public static int[] FRAME_NUM;
 	public static long[] GMT_S;
-	public static double[] RIGHT_CLOS_CONF;
-	public static double[] LEFT_CLOS_CONF;
+	public static double[] RIGHT_CLOS_CONF, LEFT_CLOS_CONF;
+	public static double[] PUPIL_R_DIAM, PUPIL_L_DIAM;
 	public static double[] BLINKING;
-	public static double[] PUPIL_R_DIAM;
-	public static double[] PUPIL_L_DIAM;
 	public static double[] BLINK_FREQ;
 
+	public static DoubleXYLineChartPanel01 dChart_PUPIL;
 
-//	public static double[] BLINK_DURATION;
-//	public static double[] PERCLOS;
-
-
-	public static DoubleXYLineChartPanel dChart_PUPIL;
 	public static DoubleXYLineChartPanel dChart_KBJD;
 	public static SingleXYLineChartPanel sChart_ZYCS;
 
-//	public static SingleXYLineChartPanel sChart_PLD;
-//	public static SingleXYLineChartPanel sChart_ZYPL;
-
 	private int pulse = 10;
-//	private static int j=0;
 	private static int timeindex=0;
 
 	public FaceViewer() {
@@ -50,13 +41,15 @@ public class FaceViewer extends JPanel implements Runnable{
 
 		new Thread(this).start();
 	}
+
+
 	public JScrollPane createTKZJJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
 
-		dChart_PUPIL = new DoubleXYLineChartPanel(
-				"左右眼瞳孔直径变化曲线", "时间", "直径/米",
-				0, 200, -0.0005, 0.01,
-				100,"左眼","右眼");
+		dChart_PUPIL = new DoubleXYLineChartPanel01(
+					"左右眼瞳孔直径变化曲线", "时间", "直径/米",
+					0, 200, -0.0005, 0.0125,
+					100,"左眼","右眼",1,0);
 		ChartPanel chart = dChart_PUPIL.getChartPanel();
 		jp.add(chart);
 
@@ -91,31 +84,6 @@ public class FaceViewer extends JPanel implements Runnable{
 	}
 
 
-	public JScrollPane createZYPLJSPane(){
-		JPanel jp = new JPanel(new FlowLayout());
-//		sChart_ZYPL = new SingleXYLineChartPanel(
-//				"眨眼频率变化曲线", "时间", "数值",
-//				0, 200, -0.1, 0.51,
-//				100,"数值");
-//		ChartPanel chart = sChart_ZYPL.getChartPanel();
-//		jp.add(chart);
-
-		JScrollPane jsp = new JScrollPane(jp);
-		return jsp;
-	}
-	public JScrollPane createPLDJSPane(){
-		JPanel jp = new JPanel(new FlowLayout());
-//		sChart_PLD = new SingleXYLineChartPanel(
-//				"疲劳度量值变化曲线", "时间", "数值",
-//				0, 200, -0.01, 0.01,
-//				100,"数值");
-//		ChartPanel chart = sChart_PLD.getChartPanel();
-//		jp.add(chart);
-//
-		JScrollPane jsp = new JScrollPane(jp);
-		return jsp;
-	}
-
 	@Override
 	public void run() {
 		while(true){
@@ -125,6 +93,8 @@ public class FaceViewer extends JPanel implements Runnable{
 				for (int i = 0; i < FRAME_NUM.length; i++) {
 					dChart_PUPIL.seriesKey1.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy1[i]);
 					dChart_PUPIL.seriesKey2.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy2[i]);
+					dChart_PUPIL.seriesKey01.add(dChart_PUPIL.valuesx[i], 0.01);
+					dChart_PUPIL.seriesKey02.add(dChart_PUPIL.valuesx[i], 0);
 
 					dChart_KBJD.seriesKey1.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy1[i]);
 					dChart_KBJD.seriesKey2.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy2[i]);

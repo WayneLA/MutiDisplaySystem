@@ -21,7 +21,7 @@ public class DoubleXYLineChartPanel implements Runnable{
     private ChartPanel chartPanel;
     private String title, xAxisLabel, yAxisLabel;
     private double lowerx, upperx, lowery, uppery, autoRange;
-    private int width = 400, height = 290;
+    private int width = 400, height = 300;
 
     public XYSeries seriesKey1,seriesKey2;
     public int[] valuesx;
