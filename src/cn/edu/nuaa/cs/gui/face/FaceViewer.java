@@ -24,7 +24,7 @@ public class FaceViewer extends JPanel implements Runnable{
 
 	public static DoubleXYLineChartPanel01 dChart_PUPIL;
 
-	public static DoubleXYLineChartPanel dChart_KBJD;
+	public static DoubleXYLineChartPanel01 dChart_KBJD;
 	public static SingleXYLineChartPanel sChart_ZYCS;
 
 	private int pulse = 10;
@@ -49,7 +49,7 @@ public class FaceViewer extends JPanel implements Runnable{
 		dChart_PUPIL = new DoubleXYLineChartPanel01(
 					"左右眼瞳孔直径变化曲线", "时间", "直径/米",
 					0, 200, -0.0005, 0.0125,
-					100,"左眼","右眼",1,0);
+					100,"左眼","右眼",0.01,0);
 		ChartPanel chart = dChart_PUPIL.getChartPanel();
 		jp.add(chart);
 
@@ -59,10 +59,10 @@ public class FaceViewer extends JPanel implements Runnable{
 	public JScrollPane createKBJDJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
 
-		dChart_KBJD = new DoubleXYLineChartPanel(
+		dChart_KBJD = new DoubleXYLineChartPanel01(
 				"左右眼开闭精度变化曲线", "时间", "直径/米",
 				0, 100, -0.1, 1.1,
-				100,"左眼","右眼");
+				100,"左眼","右眼",1,0);
 		ChartPanel chart = dChart_KBJD.getChartPanel();
 		jp.add(chart);
 
@@ -98,6 +98,10 @@ public class FaceViewer extends JPanel implements Runnable{
 
 					dChart_KBJD.seriesKey1.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy1[i]);
 					dChart_KBJD.seriesKey2.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy2[i]);
+
+					dChart_KBJD.seriesKey01.add(dChart_KBJD.valuesx[i], 1);
+					dChart_KBJD.seriesKey02.add(dChart_KBJD.valuesx[i], 0);
+
 
 					sChart_ZYCS.seriesKey.add(sChart_ZYCS.valuesx[i], sChart_ZYCS.valuesy[i]);
 					try {
