@@ -1,7 +1,6 @@
 package cn.edu.nuaa.cs.gui.shuru;
 
 import cn.edu.nuaa.cs.gui.main.MainWindow;
-import cn.edu.nuaa.cs.gui.main.ZHWindow;
 import cn.edu.nuaa.cs.io.DirectoryWatcher3;
 
 import javax.swing.*;

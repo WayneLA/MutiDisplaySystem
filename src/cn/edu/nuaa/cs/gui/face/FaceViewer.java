@@ -3,12 +3,14 @@ package cn.edu.nuaa.cs.gui.face;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.*;
 
 import cn.edu.nuaa.cs.chart.DoubleXYLineChartPanel;
 import cn.edu.nuaa.cs.chart.DoubleXYLineChartPanel01;
 import cn.edu.nuaa.cs.chart.SingleXYLineChartPanel;
+import cn.edu.nuaa.cs.gui.warning.WarningDialog;
 import cn.edu.nuaa.cs.io.FileHelper;
 import org.jfree.chart.ChartPanel;
 
@@ -30,6 +32,9 @@ public class FaceViewer extends JPanel implements Runnable{
 	private int pulse = 10;
 	private static int timeindex=0;
 
+	public static double pupil_max = 0.006;
+	public static double pupil_min = 0.004;
+
 	public FaceViewer() {
 		setLayout(new BorderLayout());
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -46,10 +51,11 @@ public class FaceViewer extends JPanel implements Runnable{
 	public JScrollPane createTKZJJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
 
+
 		dChart_PUPIL = new DoubleXYLineChartPanel01(
 					"左右眼瞳孔直径变化曲线", "时间", "直径/米",
 					0, 200, -0.0005, 0.0125,
-					100,"左眼","右眼",0.01,0);
+					100,"左眼","右眼",0.006,0.004);
 		ChartPanel chart = dChart_PUPIL.getChartPanel();
 		jp.add(chart);
 
@@ -93,8 +99,11 @@ public class FaceViewer extends JPanel implements Runnable{
 				for (int i = 0; i < FRAME_NUM.length; i++) {
 					dChart_PUPIL.seriesKey1.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy1[i]);
 					dChart_PUPIL.seriesKey2.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy2[i]);
-					dChart_PUPIL.seriesKey01.add(dChart_PUPIL.valuesx[i], 0.01);
-					dChart_PUPIL.seriesKey02.add(dChart_PUPIL.valuesx[i], 0);
+					dChart_PUPIL.seriesKey01.add(dChart_PUPIL.valuesx[i], pupil_max);
+					dChart_PUPIL.seriesKey02.add(dChart_PUPIL.valuesx[i], pupil_min);
+
+					WarningDialog.WaningDialog_fb(dChart_PUPIL.valuesy1[i],pupil_max,pupil_min);
+
 
 					dChart_KBJD.seriesKey1.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy1[i]);
 					dChart_KBJD.seriesKey2.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy2[i]);
@@ -126,6 +135,8 @@ public class FaceViewer extends JPanel implements Runnable{
 		File file = new File(FaceWindow.faceLabPath+curFileName);
 		ArrayList<String> contents = FileHelper.readFileByLine(file);
 
+		System.out.println(contents.size());
+
 		FRAME_NUM = new int[contents.size()-1];
 		GMT_S = new long[contents.size()-1];
 		RIGHT_CLOS_CONF = new double[contents.size()-1];
@@ -135,11 +146,12 @@ public class FaceViewer extends JPanel implements Runnable{
 		PUPIL_R_DIAM = new double[contents.size()-1];
 		PUPIL_L_DIAM = new double[contents.size()-1];
 
-		for (int i = 1; i < contents.size(); i++) {
+		for (int i = 1; i < contents.size()-1; i++) {
 			String[] tuple = contents.get(i).trim().split("\\s+");
 
 //			FRAME_NUM[i-1] = Integer.valueOf(tuple[0]);
 			FRAME_NUM[i-1] = timeindex++;
+
 			GMT_S[i-1] = Long.valueOf(tuple[1]);
 			RIGHT_CLOS_CONF[i-1] = Double.valueOf(tuple[2]);
 			LEFT_CLOS_CONF[i-1] = Double.valueOf(tuple[3]);
@@ -165,5 +177,6 @@ public class FaceViewer extends JPanel implements Runnable{
 		}
 		curFileName = null;
 	}
+
 
 }

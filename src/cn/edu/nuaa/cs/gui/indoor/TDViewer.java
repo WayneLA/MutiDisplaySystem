@@ -21,7 +21,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -154,7 +153,6 @@ public class TDViewer extends JPanel implements Runnable {
                 }
             }
         }
-
         tg.addChild(createBuilding());
 
         branchGroup.detach();
@@ -167,6 +165,12 @@ public class TDViewer extends JPanel implements Runnable {
         if(branchGroup.getParent()==null){
             simpleUniverse.addBranchGraph(branchGroup);
         }
+
+
+        //演示室内对象行驶轨迹
+        paintTestLine();
+
+
     }
 
     public void initRedRooms(){
@@ -418,7 +422,6 @@ public class TDViewer extends JPanel implements Runnable {
 
                 ColoringAttributes colorAttr = new ColoringAttributes();
                 colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-                //colorAttr.setColor(1.0f, 0.0f, 0.0f);//
                 colorAttr.setColor(0.0f, 1.0f, 0.0f);
 
                 LineAttributes lineAttr = new LineAttributes();
@@ -544,7 +547,6 @@ public class TDViewer extends JPanel implements Runnable {
 
                 ColoringAttributes colorAttr = new ColoringAttributes();
                 colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-                //colorAttr.setColor(1.0f, 0.0f, 0.0f);//
                 colorAttr.setColor(0.0f, 1.0f, 0.0f);
 
                 LineAttributes lineAttr = new LineAttributes();
@@ -614,8 +616,7 @@ public class TDViewer extends JPanel implements Runnable {
                         ++count;
                 }
             }
-        }
-        else{
+        }else{
             return false;
         }
         if(count%2==0){
@@ -627,36 +628,9 @@ public class TDViewer extends JPanel implements Runnable {
 
     @Override
     public void run(){
-//        while(true){
-//            if(fileName!=null){
-//                Vector<Point3d> p3dVec = getContent();
-//                paintTrajectory(create3DLine(p3dVec));
-//
-//                Vector circle = new Vector();
-//                for (int i = 0; i < p3dVec.size(); i++) {
-//                    Vector v = getInsideCircle(p3dVec.get(i));
-//                    if(v!=null){
-//                        for(int j=0;j<RedRooms.size();j++){
-//                            Vector rv = (Vector) ((FloorRoom)RedRooms.get(j)).circleVec.get(0);
-//                            if(v.equals(rv)){
-//                                JOptionPane.showMessageDialog(null, "alert", "alert", JOptionPane.ERROR_MESSAGE);
-//                            }
-//                        }
-//                        circle.add(v);
-//                    }
-//                }
-//                paintRoom(circle);
-//                continue;
-//            }else{
-//                try {
-//                    Thread.sleep(3000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
         String pline = null;
         String cline = null;
+
         while(true){
             try {
                 Thread.sleep(1000);
@@ -711,48 +685,8 @@ public class TDViewer extends JPanel implements Runnable {
                 //e.printStackTrace();
             }
         }
+
     }
-
-    public static void paintTestLine(){
-        System.out.println("paintTestLine");
-
-        ColoringAttributes colorAttr = new ColoringAttributes();
-        colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-        colorAttr.setColor(0.0f, 0.0f, 1.0f);
-
-        LineAttributes lineAttr = new LineAttributes();
-        lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
-        lineAttr.setLineWidth(2.0f);
-        lineAttr.setLinePattern(1);
-        lineAttr.setLineAntialiasingEnable(true);
-
-        Appearance appear = new Appearance();
-        appear.setColoringAttributes(colorAttr);
-        appear.setLineAttributes(lineAttr);
-
-
-
-        TransformGroup tg = new TransformGroup();
-
-        Point3d p1 = new Point3d(-0.1, -0.2, -0.3);
-        Point3d p2 = new Point3d(0.1, 0.2, 0.3);
-        Point3d[] p3dArray = new Point3d[]{p1, p2};
-
-        LineArray line = new LineArray(p3dArray.length, LineArray.COORDINATES);
-        line.setCoordinates(0, p3dArray);
-        line.setCapability(Geometry.ALLOW_INTERSECT);
-        Shape3D structure = new Shape3D(line, appear);
-        tg.addChild(structure);
-
-
-        branchGroup.detach();
-        TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
-        tgRoot.addChild(tg);
-        if(branchGroup.getParent()==null){
-            simpleUniverse.addBranchGraph(branchGroup);
-        }
-    }
-
 
     public static Vector<Point3d> getContent() {
         Vector<Point3d> vector = new Vector<Point3d>(5,1);
@@ -766,4 +700,52 @@ public class TDViewer extends JPanel implements Runnable {
         fileName = null;
         return vector;
     }
+
+
+    public static void paintTestLine(){
+        System.out.println("paintTestLine");
+
+        File file = new File("D:\\IdeaProjects\\Data\\Indoor\\location\\test\\location.txt");
+        if(file.exists()){
+            ArrayList<String> locations = FileHelper.readFileByLine(file);
+            Point3d[] p3dArray = new Point3d[locations.size()];
+            for (int i=0; i<locations.size(); i++) {
+                String[] strs = locations.get(i).trim().split(" ");
+                p3dArray[i] = new Point3d(Double.valueOf(strs[0]), Double.valueOf(strs[1]), Double.valueOf(strs[2]));
+            }
+
+
+            ColoringAttributes colorAttr = new ColoringAttributes();
+            colorAttr.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
+            colorAttr.setColor(0.0f, 0.0f, 1.0f);
+
+            LineAttributes lineAttr = new LineAttributes();
+            lineAttr.setCapability(LineAttributes.ALLOW_WIDTH_WRITE);
+            lineAttr.setLineWidth(2.0f);
+            lineAttr.setLinePattern(1);
+            lineAttr.setLineAntialiasingEnable(true);
+
+            Appearance appear = new Appearance();
+            appear.setColoringAttributes(colorAttr);
+            appear.setLineAttributes(lineAttr);
+
+            TransformGroup tg = new TransformGroup();
+
+            System.out.println(p3dArray.length);
+
+            LineArray line = new LineArray(p3dArray.length, LineArray.COORDINATES);
+            line.setCoordinates(0, p3dArray);
+            line.setCapability(Geometry.ALLOW_INTERSECT);
+            Shape3D structure = new Shape3D(line, appear);
+            tg.addChild(structure);
+
+            branchGroup.detach();
+            TransformGroup tgRoot = (TransformGroup) branchGroup.getChild(0);
+            tgRoot.addChild(tg);
+            if(branchGroup.getParent()==null){
+                simpleUniverse.addBranchGraph(branchGroup);
+            }
+        }
+    }
+
 }

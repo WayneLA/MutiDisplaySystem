@@ -16,7 +16,7 @@ public class ZHWindow extends JPanel{
 		jsp_u.setEnabled(true);
 		jsp_u.setDividerLocation(width/4);
 
-		JSplitPane jsp_d = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, MainWindow.win03, new JPanel());
+		JSplitPane jsp_d = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, MainWindow.win03, MainWindow.win05);
 		jsp_d.setOneTouchExpandable(true);
 		jsp_d.setEnabled(true);
 		jsp_d.setDividerLocation(width/4);
