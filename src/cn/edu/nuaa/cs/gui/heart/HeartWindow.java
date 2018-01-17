@@ -1,7 +1,6 @@
 package cn.edu.nuaa.cs.gui.heart;
 
 import cn.edu.nuaa.cs.gui.main.MainWindow;
-import cn.edu.nuaa.cs.io.DirectoryWatcher3;
 import cn.edu.nuaa.cs.io.DirectoryWatcher4;
 
 import javax.swing.*;
@@ -12,7 +11,7 @@ import java.nio.file.Paths;
  * Created by 85492 on 2017/10/27.
  */
 public class HeartWindow extends JPanel{
-    public static String dirPath = MainWindow.rootPath+"\\Heart\\";
+    public static String dirPath = MainWindow.rootPath_Data +"\\Heart\\";
     public static Thread watchThread;
 
     public HeartWindow(){

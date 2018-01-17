@@ -11,7 +11,7 @@ import java.nio.file.Paths;
  * Created by 85492 on 2017/10/27.
  */
 public class SRWindow extends JPanel{
-    public static String dirPath = MainWindow.rootPath+"\\SR\\";
+    public static String dirPath = MainWindow.rootPath_Data +"\\SR\\";
     public static Thread watchThread;
 
     public SRWindow(){

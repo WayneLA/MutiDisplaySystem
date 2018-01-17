@@ -14,26 +14,25 @@ import cn.edu.nuaa.cs.gui.warning.WarningDialog;
 import cn.edu.nuaa.cs.io.FileHelper;
 import org.jfree.chart.ChartPanel;
 
-public class FaceViewer extends JPanel implements Runnable{
+public class FaceViewer extends JPanel{
 	public static String curFileName = null;
 
-	public static int[] FRAME_NUM;
-	public static long[] GMT_S;
-	public static double[] RIGHT_CLOS_CONF, LEFT_CLOS_CONF;
-	public static double[] PUPIL_R_DIAM, PUPIL_L_DIAM;
-	public static double[] BLINKING;
-	public static double[] BLINK_FREQ;
+	public static int[] FRAME_NUM;//帧数
+	public static long[] GMT_S;//时间
+	public static double[] RIGHT_CLOS_CONF, LEFT_CLOS_CONF;//开闭精度
+	public static double[] PUPIL_R_DIAM, PUPIL_L_DIAM;//瞳孔直径
+	public static double[] BLINKING;//眨眼次数
+	public static double[] BLINK_FREQ;//眨眼频率
 
 	public static DoubleXYLineChartPanel01 dChart_PUPIL;
-
 	public static DoubleXYLineChartPanel01 dChart_KBJD;
 	public static SingleXYLineChartPanel sChart_ZYCS;
 
-	private int pulse = 10;
-	private static int timeindex=0;
+	public static double pupil_max = 0.006;//瞳孔直径最大值
+	public static double pupil_min = 0.004;//瞳孔直径最小值
 
-	public static double pupil_max = 0.006;
-	public static double pupil_min = 0.004;
+	private static int pulse = 10;
+	private static int timeindex=0;
 
 	public FaceViewer() {
 		setLayout(new BorderLayout());
@@ -41,41 +40,31 @@ public class FaceViewer extends JPanel implements Runnable{
 		tabbedPane.add("瞳孔直径", createTKZJJSPane());
 		tabbedPane.add("开闭精度", createKBJDJSPane());
 		tabbedPane.add("眨眼次数", createZYCSJSPane());
-
 		add(tabbedPane, BorderLayout.CENTER);
-
-		new Thread(this).start();
 	}
-
 
 	public JScrollPane createTKZJJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
-
-
 		dChart_PUPIL = new DoubleXYLineChartPanel01(
 					"左右眼瞳孔直径变化曲线", "时间", "直径/米",
 					0, 200, -0.0005, 0.0125,
 					100,"左眼","右眼",0.006,0.004);
 		ChartPanel chart = dChart_PUPIL.getChartPanel();
 		jp.add(chart);
-
 		JScrollPane jsp = new JScrollPane(jp);
 		return jsp;
 	}
 	public JScrollPane createKBJDJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
-
 		dChart_KBJD = new DoubleXYLineChartPanel01(
 				"左右眼开闭精度变化曲线", "时间", "直径/米",
 				0, 100, -0.1, 1.1,
 				100,"左眼","右眼",1,0);
 		ChartPanel chart = dChart_KBJD.getChartPanel();
 		jp.add(chart);
-
 		JScrollPane jsp = new JScrollPane(jp);
 		return jsp;
 	}
-
 	public JScrollPane createZYCSJSPane(){
 		JPanel jp = new JPanel(new FlowLayout());
 		sChart_ZYCS = new SingleXYLineChartPanel(
@@ -84,58 +73,14 @@ public class FaceViewer extends JPanel implements Runnable{
 				100,"数值");
 		ChartPanel chart = sChart_ZYCS.getChartPanel();
 		jp.add(chart);
-
 		JScrollPane jsp = new JScrollPane(jp);
 		return jsp;
 	}
 
-
-	@Override
-	public void run() {
-		while(true){
-			if(curFileName!=null){
-				System.out.println(">>>    "+curFileName);
-				getContent();
-				for (int i = 0; i < FRAME_NUM.length; i++) {
-					dChart_PUPIL.seriesKey1.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy1[i]);
-					dChart_PUPIL.seriesKey2.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy2[i]);
-					dChart_PUPIL.seriesKey01.add(dChart_PUPIL.valuesx[i], pupil_max);
-					dChart_PUPIL.seriesKey02.add(dChart_PUPIL.valuesx[i], pupil_min);
-
-					WarningDialog.WaningDialog_fb(dChart_PUPIL.valuesy1[i],pupil_max,pupil_min);
-
-
-					dChart_KBJD.seriesKey1.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy1[i]);
-					dChart_KBJD.seriesKey2.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy2[i]);
-
-					dChart_KBJD.seriesKey01.add(dChart_KBJD.valuesx[i], 1);
-					dChart_KBJD.seriesKey02.add(dChart_KBJD.valuesx[i], 0);
-
-
-					sChart_ZYCS.seriesKey.add(sChart_ZYCS.valuesx[i], sChart_ZYCS.valuesy[i]);
-					try {
-						Thread.sleep(pulse);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				continue;
-			}else{
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-
-	public static void getContent(){
+	public static void getContent(String curFileName){
+		System.out.println(">>>    "+curFileName);
 		File file = new File(FaceWindow.faceLabPath+curFileName);
 		ArrayList<String> contents = FileHelper.readFileByLine(file);
-
-		System.out.println(contents.size());
 
 		FRAME_NUM = new int[contents.size()-1];
 		GMT_S = new long[contents.size()-1];
@@ -179,4 +124,41 @@ public class FaceViewer extends JPanel implements Runnable{
 	}
 
 
+	public static class FaceViewerRunnable implements Runnable{
+		@Override
+		public void run() {
+			while(true){
+				if(curFileName!=null){
+					getContent(curFileName);
+					for (int i = 0; i < FRAME_NUM.length; i++) {
+						dChart_PUPIL.seriesKey1.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy1[i]);
+						dChart_PUPIL.seriesKey2.add(dChart_PUPIL.valuesx[i], dChart_PUPIL.valuesy2[i]);
+						dChart_PUPIL.seriesKey01.add(dChart_PUPIL.valuesx[i], pupil_max);
+						dChart_PUPIL.seriesKey02.add(dChart_PUPIL.valuesx[i], pupil_min);
+						WarningDialog.WaningDialog_fb(dChart_PUPIL.valuesy1[i],pupil_max,pupil_min);
+
+						dChart_KBJD.seriesKey1.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy1[i]);
+						dChart_KBJD.seriesKey2.add(dChart_KBJD.valuesx[i], dChart_KBJD.valuesy2[i]);
+
+						dChart_KBJD.seriesKey01.add(dChart_KBJD.valuesx[i], 1);
+						dChart_KBJD.seriesKey02.add(dChart_KBJD.valuesx[i], 0);
+
+						sChart_ZYCS.seriesKey.add(sChart_ZYCS.valuesx[i], sChart_ZYCS.valuesy[i]);
+						try {
+							Thread.sleep(pulse);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					continue;
+				}else{
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	}
 }

@@ -10,9 +10,9 @@ import java.nio.file.Paths;
 import javax.swing.*;
 
 public class IndoorWindow extends JPanel {
-	public static String fileName = MainWindow.rootPath+"\\Indoor\\building\\building.dat";
-	public static String locationPath = MainWindow.rootPath+"\\Indoor\\location\\";
-	public static String redroomsPath = MainWindow.rootPath+"\\Indoor\\redrooms\\";
+	public static String fileName = MainWindow.rootPath_Data +"\\Indoor\\building\\building.dat";
+	public static String locationPath = MainWindow.rootPath_Data +"\\Indoor\\location\\";
+	public static String redroomsPath = MainWindow.rootPath_Data +"\\Indoor\\redrooms\\";
 	public static Thread watchThread2;
 
 	public IndoorWindow(){

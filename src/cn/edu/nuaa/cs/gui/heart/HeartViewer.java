@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * Created by 85492 on 2017/10/27.
  */
 public class HeartViewer extends JPanel implements Runnable{
-    public static String heartPath = MainWindow.rootPath+"\\Heart\\";
+    public static String heartPath = MainWindow.rootPath_Data +"\\Heart\\";
     public static String curFileName = null;
     private int pulse = 50;
     public static String[] time;
@@ -40,7 +40,7 @@ public class HeartViewer extends JPanel implements Runnable{
         add(jsp);
         setVisible(true);
 
-        heartPath = MainWindow.rootPath+"\\Heart\\";
+        heartPath = MainWindow.rootPath_Data +"\\Heart\\";
 
         new Thread(this).start();
     }
@@ -115,7 +115,7 @@ public class HeartViewer extends JPanel implements Runnable{
     }
 
     public static void main(String[] args){
-        MainWindow.rootPath = "D:\\IdeaProjects\\Data";
+        MainWindow.rootPath_Data = "D:\\IdeaProjects\\Data";
         new HeartWindow();
         JPanel jpl = new HeartViewer();
 

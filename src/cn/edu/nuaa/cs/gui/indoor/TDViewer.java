@@ -168,7 +168,7 @@ public class TDViewer extends JPanel implements Runnable {
 
 
         //演示室内对象行驶轨迹
-        paintTestLine();
+//        paintTestLine();
 
 
     }

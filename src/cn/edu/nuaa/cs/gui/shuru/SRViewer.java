@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * Created by 85492 on 2017/10/27.
  */
 public class SRViewer extends JPanel implements Runnable{
-    public static String faceLabPath = MainWindow.rootPath+"\\SR\\";
+    public static String faceLabPath = MainWindow.rootPath_Data +"\\SR\\";
     public static String curFileName = null;
     private int pulse = 500;
     public static SingleXYLineChartPanel schart;

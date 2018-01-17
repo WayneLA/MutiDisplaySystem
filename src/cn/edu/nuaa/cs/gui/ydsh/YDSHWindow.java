@@ -7,7 +7,7 @@ import java.awt.*;
 import javax.swing.*;
 
 public class YDSHWindow extends JPanel {
-	public static String dirPath = MainWindow.rootPath+"\\YDSH";
+	public static String dirPath = MainWindow.rootPath_Data +"\\YDSH";
 
 	public YDSHWindow(){
 		setLayout(new BorderLayout());
@@ -17,5 +17,16 @@ public class YDSHWindow extends JPanel {
 		JL_title.setOpaque(true);
 		add(JL_title, BorderLayout.NORTH);
 		add(new YDSHViewer(), BorderLayout.CENTER);
+	}
+
+	public static void main(String[] args){
+		dirPath = "D:\\IdeaProjects\\Data\\YDSH";
+		JFrame jf = new JFrame("目标对象运动手环数据显示窗口");
+		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		jf.setBounds(300,50,800,600);
+		jf.setLayout(new BorderLayout());
+		jf.add(new YDSHWindow(),BorderLayout.CENTER);
+		jf.setResizable(false);
+		jf.setVisible(true);
 	}
 }
