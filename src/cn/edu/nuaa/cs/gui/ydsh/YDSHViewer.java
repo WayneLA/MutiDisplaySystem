@@ -24,17 +24,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Vector;
 
 /**
  * Created by 85492 on 2017/3/10.
  */
 public class YDSHViewer extends JPanel{
     public static SimpleDateFormat sdf_day = new SimpleDateFormat("yy-mm-dd");
-    public static SimpleDateFormat sdf = new SimpleDateFormat("mm:ss");
 
     public JButton playButton,backwordButton,forwardButton;
     public JPanel progressTimepanel;
-    public JLabel currentLabel,totalLabel;
+    public JLabel currentLabel,endLabel;
     public JProgressBar progressBar;
     public String btnText = ">";
 
@@ -42,9 +42,31 @@ public class YDSHViewer extends JPanel{
     Entry[] entries = new Entry[17];
     public int r = 30;
 
-    public int totalValue = 9988779;
-    public int startValue = 110100;
-    public int curValue = startValue;
+    public SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public String starttime = "2016-04-14 00:00:00", endtime = "2016-06-14 23:59:59";
+    public Date start, end, curValue;
+    public long total;
+    public volatile boolean runflag = true;
+    public static int clickTime = 0, speed = 1;
+
+    public static String time1_string = "7:00:00";
+    public static String time2_string = "12:00:00";
+    public static String time3_string = "14:00:00";
+    public static String time4_string = "18:00:00";
+    public static String time5_string = "22:00:00";
+
+    public static Vector<String [][]> result = new Vector<>(10);
+
+    {
+        try {
+            start = sdf.parse(starttime);
+            end = sdf.parse(endtime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        curValue = start;
+        total = (end.getTime()-start.getTime())/(1000*60);
+    }
 
     public int[][] relations = {
             {0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0},//1
@@ -63,7 +85,7 @@ public class YDSHViewer extends JPanel{
             {1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0},//14
             {0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1},//15
             {0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1},//16
-            {0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0}//17
+            {0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0} //17
     };
     String[] names = {"71450114","71450120","71450122","71450124","71550125",
             "71450126","71550129","71550130","71550131","71550126","71550103",
@@ -75,6 +97,28 @@ public class YDSHViewer extends JPanel{
         jpc = createCtrlSlider();
         add(jpd,BorderLayout.CENTER);
         add(jpc,BorderLayout.SOUTH);
+
+        File dir = new File(YDSHWindow.dirPath+"//4_state//");
+        File[] files = dir.listFiles();
+        for(File f : files) {
+            ArrayList<String> content = FileHelper.readFileByLine(f);
+            String[][] cont = new String[content.size()][5];
+            for (int i = 0; i < content.size(); i++) {
+                cont[i] = content.get(i).split(",");
+            }
+            result.add(cont);
+        }
+/*
+        for (int i = 0; i < result.size(); i++) {
+            for (int j = 0; j < result.get(i).length; j++) {
+                for (int k = 0; k < result.get(i)[j].length; k++) {
+                    System.out.print(result.get(i)[j][k]+" , ");
+                }
+                System.out.println("");
+            }
+            System.out.println("******************************************");
+        }
+*/
     }
     public JPanel createEntriesDataPanel(){
         JPanel jp = new GroupJPanel();
@@ -100,53 +144,51 @@ public class YDSHViewer extends JPanel{
         backwordButton = new JButton("<<");
         backwordButton.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-//                MyMain.jumpTo((float) ((progressBar.getPercentComplete() * progressBar.getWidth() - 5)
-//                        / progressBar.getWidth()));
-                System.out.println("<<");
+                if(speed > 2) {
+                    speed = speed / 2;
+                }else{
+                    speed = 1;
+                }
             }
         });
         forwardButton = new JButton(">>");
-        forwardButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-//                MyMain.jumpTo((float) (((progressBar.getPercentComplete() * progressBar.getWidth() + 15))
-//                        / progressBar.getWidth()));
-                System.out.println(">>");
+        forwardButton.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                speed = speed * 2;
             }
         });
         playButton = new JButton(">");
         playButton.addMouseListener(new MouseAdapter() {
-
-            @Override
             public void mouseClicked(MouseEvent e) {
+                clickTime++;
                 if (playButton.getText() == ">") {
-                    play();
+                    if(clickTime==1){
+                        play();
+                    }else{
+                        runflag = true;
+                    }
                     btnText = "||";
                     playButton.setText(btnText);
                 } else {
-//                    pause();
+                    runflag = false;
                     btnText = ">";
                     playButton.setText(btnText);
                 }
-                System.out.println(">");
             }
         });
         jp.add(backwordButton);
         jp.add(playButton);
         jp.add(forwardButton);
-
         progressTimepanel = new JPanel();
         jp.add(progressTimepanel);
-
         progressBar = new JProgressBar();
-        progressBar.setPreferredSize(new Dimension(400,15));
+        progressBar.setPreferredSize(new Dimension(300,15));
 
-        currentLabel = new JLabel("00:00");
+        currentLabel = new JLabel(starttime);
         progressTimepanel.add(currentLabel);
-
         progressTimepanel.add(progressBar);
-
-        totalLabel = new JLabel(sdf.format(new Date(totalValue)));
-        progressTimepanel.add(totalLabel);
+        endLabel = new JLabel(endtime);
+        progressTimepanel.add(endLabel);
 
         return jp;
     }
@@ -154,25 +196,31 @@ public class YDSHViewer extends JPanel{
     public void play(){
         new Thread(){
             public void run(){
-                for (int i = curValue; i < totalValue; i++) {
-                    curValue = i;
-                    progressBar.setValue(i/((totalValue-110100)/100));
-                    currentLabel.setText(sdf.format(new Date(i)));
-//                    try {
-//                        Thread.sleep(1);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                for (long i = 0; i < total; ) {
+                    while(runflag){
+                        curValue = new Date(start.getTime() + i * 60 * 1000);
+                        if(curValue.after(end)){
+                            break;
+                        }
+                        currentLabel.setText(sdf.format(curValue));
+                        progressBar.setValue((int) ((i / Double.valueOf(total)) * 100));
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        i = i + speed;
+
+                        jpd.repaint();
+                    }
                 }
                 btnText = ">";
                 playButton.setText(btnText);
-                curValue = startValue;
+                curValue = start;
+                speed = 1;
+                clickTime = 0;
             }
         }.start();
-    }
-
-    public void pause(){
-
     }
 
     class GroupJPanel extends JPanel implements MouseListener {
@@ -295,7 +343,7 @@ public class YDSHViewer extends JPanel{
 
         public void showDetails() {
             JFrame jf = new JFrame(id+" - "+names[id-1] + " 运动手环数据");
-            jf.setBounds(300, 50, 1000, 800);
+            jf.setBounds(10, 10, 1000, 600);
             jf.add(DetailsPanel(), BorderLayout.CENTER);
             jf.setVisible(true);
         }
@@ -312,37 +360,47 @@ public class YDSHViewer extends JPanel{
             return jp;
         }
         public JPanel createChart(String fileName) {
-            File file_state = new File(YDSHWindow.dirPath+"//4_state//"+fileName+".csv");
+//            File file_state = new File(YDSHWindow.dirPath+"//4_state//"+fileName+".csv");
+//            ArrayList<String> contents_state = FileHelper.readFileByLine(file_state);
+//            Date[] date = new Date[contents_state.size()];
+//            int[] state1 = new int[contents_state.size()];
+//            int[] state2 = new int[contents_state.size()];
+//            int[] state3 = new int[contents_state.size()];
+//            int[] state4 = new int[contents_state.size()];
+//            for (int i = 0; i < contents_state.size(); i++) {
+//                String[] strs_state = contents_state.get(i).trim().split(",");
+//                try {
+//                    date[i] = sdf_day.parse(strs_state[0]);
+//                } catch (ParseException e) {
+//                    e.printStackTrace();
+//                }
+//                state1[i] = Double.valueOf(strs_state[1]).intValue();
+//                state2[i] = Double.valueOf(strs_state[2]).intValue();
+//                state3[i] = Double.valueOf(strs_state[3]).intValue();
+//                state4[i] = Double.valueOf(strs_state[4]).intValue();
+//            }
+
             File file_qq = new File(YDSHWindow.dirPath+"//5_historySteps_qq//"+fileName+".csv");
             File file_app = new File(YDSHWindow.dirPath+"//6_historySteps_app//"+fileName+".csv");
             File file_wristbands = new File(YDSHWindow.dirPath+"//7_historySteps_wristbands//"+fileName+".csv");
 
-            ArrayList<String> contents_state = FileHelper.readFileByLine(file_state);
             ArrayList<String> contents_qq = FileHelper.readFileByLine(file_qq);
             ArrayList<String> contents_app = FileHelper.readFileByLine(file_app);
             ArrayList<String> contents_wristbands = FileHelper.readFileByLine(file_wristbands);
 
-            Date[] date = new Date[contents_state.size()];
-            int[] state1 = new int[contents_state.size()];
-            int[] state2 = new int[contents_state.size()];
-            int[] state3 = new int[contents_state.size()];
-            int[] state4 = new int[contents_state.size()];
-            int[] qqSteps = new int[contents_qq.size()];
-            int[] appSteps = new int[contents_app.size()];
-            int[] wristbandSteps = new int[contents_wristbands.size()];
-
-            for (int i = 0; i < contents_state.size(); i++) {
-                String[] strs_state = contents_state.get(i).trim().split(",");
+            Date[] date = new Date[contents_qq.size()];
+            for (int i = 0; i < contents_qq.size(); i++) {
+                String[] strs_state = contents_qq.get(i).trim().split(",");
                 try {
                     date[i] = sdf_day.parse(strs_state[0]);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
-                state1[i] = Double.valueOf(strs_state[1]).intValue();
-                state2[i] = Double.valueOf(strs_state[2]).intValue();
-                state3[i] = Double.valueOf(strs_state[3]).intValue();
-                state4[i] = Double.valueOf(strs_state[4]).intValue();
             }
+            int[] qqSteps = new int[contents_qq.size()];
+            int[] appSteps = new int[contents_app.size()];
+            int[] wristbandSteps = new int[contents_wristbands.size()];
+
             for (int i = 0; i < contents_qq.size(); i++) {
                 String[] strs_qq = contents_qq.get(i).trim().split(",");
                 qqSteps[i] = Double.valueOf(strs_qq[1]).intValue();
@@ -361,7 +419,7 @@ public class YDSHViewer extends JPanel{
             CategoryDataset dataset;
             DefaultCategoryDataset dataset1 = new DefaultCategoryDataset();
 
-            for (int i = 0; i < contents_state.size(); i++) {
+            for (int i = 0; i < contents_qq.size(); i++) {
 //            for (int i = 0; i < 5; i++) {
                 dataset1.addValue(qqSteps[i], "QQ", sdf_day.format(date[i]));
                 dataset1.addValue(appSteps[i], "APP", sdf_day.format(date[i]));

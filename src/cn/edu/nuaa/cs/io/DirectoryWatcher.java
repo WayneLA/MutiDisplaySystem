@@ -59,13 +59,11 @@ public class DirectoryWatcher implements Runnable {
                 continue;
             }
 //            System.out.println("事件：" + event.kind() + "，" + "文件名：" + event.context());
-
             FaceViewer.curFileName = event.context().toString();
         }
         // 重置并继续监控
         return signal.reset();
     }
-
 //    public static void main(String[] args) {
 //        new Thread(new DirectoryWatcher(Paths.get("D:/"))).run();
 //    }
